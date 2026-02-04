@@ -1,0 +1,225 @@
+/* Color Utility Classes */
+
+/* Background Colors */
+.bg-primary {
+  @apply bg-[hsl(var(--primary))];
+}
+.bg-primary-foreground {
+  @apply bg-[hsl(var(--primary-foreground))];
+}
+.bg-secondary {
+  @apply bg-[hsl(var(--secondary))];
+}
+.bg-secondary-foreground {
+  @apply bg-[hsl(var(--secondary-foreground))];
+}
+.bg-accent {
+  @apply bg-[hsl(var(--accent-color))];
+}
+.bg-accent-foreground {
+  @apply bg-[hsl(var(--accent-foreground))];
+}
+.bg-destructive {
+  @apply bg-[hsl(var(--error))];
+}
+.bg-destructive-foreground {
+  @apply bg-[hsl(var(--error-foreground))];
+}
+.bg-success {
+  @apply bg-[hsl(var(--success))];
+}
+.bg-success-foreground {
+  @apply bg-[hsl(var(--success-foreground))];
+}
+.bg-warning {
+  @apply bg-[hsl(var(--warning))];
+}
+.bg-warning-foreground {
+  @apply bg-[hsl(var(--warning-foreground))];
+}
+.bg-muted {
+  @apply bg-[hsl(var(--muted))];
+}
+.bg-muted-foreground {
+  @apply bg-[hsl(var(--muted-foreground))];
+}
+.bg-card {
+  @apply bg-[hsl(var(--card))];
+}
+.bg-card-foreground {
+  @apply bg-[hsl(var(--card-foreground))];
+}
+.bg-popover {
+  @apply bg-[hsl(var(--popover))];
+}
+.bg-popover-foreground {
+  @apply bg-[hsl(var(--popover-foreground))];
+}
+.bg-background {
+  @apply bg-[hsl(var(--background))];
+}
+.bg-foreground {
+  @apply bg-[hsl(var(--foreground))];
+}
+
+/* Text Colors */
+.text-primary {
+  @apply text-[hsl(var(--primary))];
+}
+.text-primary-foreground {
+  @apply text-[hsl(var(--primary-foreground))];
+}
+.text-secondary {
+  @apply text-[hsl(var(--secondary))];
+}
+.text-secondary-foreground {
+  @apply text-[hsl(var(--secondary-foreground))];
+}
+.text-accent {
+  @apply text-[hsl(var(--accent-color))];
+}
+.text-accent-foreground {
+  @apply text-[hsl(var(--accent-foreground))];
+}
+.text-destructive {
+  @apply text-[hsl(var(--error))];
+}
+.text-destructive-foreground {
+  @apply text-[hsl(var(--error-foreground))];
+}
+.text-success {
+  @apply text-[hsl(var(--success))];
+}
+.text-success-foreground {
+  @apply text-[hsl(var(--success-foreground))];
+}
+.text-warning {
+  @apply text-[hsl(var(--warning))];
+}
+.text-warning-foreground {
+  @apply text-[hsl(var(--warning-foreground))];
+}
+.text-muted {
+  @apply text-[hsl(var(--muted))];
+}
+.text-muted-foreground {
+  @apply text-[hsl(var(--muted-foreground))];
+}
+.text-card {
+  @apply text-[hsl(var(--card))];
+}
+.text-card-foreground {
+  @apply text-[hsl(var(--card-foreground))];
+}
+.text-popover {
+  @apply text-[hsl(var(--popover))];
+}
+.text-popover-foreground {
+  @apply text-[hsl(var(--popover-foreground))];
+}
+.text-background {
+  @apply text-[hsl(var(--background))];
+}
+.text-foreground {
+  @apply text-[hsl(var(--foreground))];
+}
+
+/* Border Colors */
+.border-primary {
+  @apply border-[hsl(var(--primary))];
+}
+.border-secondary {
+  @apply border-[hsl(var(--secondary))];
+}
+.border-accent {
+  @apply border-[hsl(var(--accent-color))];
+}
+.border-destructive {
+  @apply border-[hsl(var(--error))];
+}
+.border-success {
+  @apply border-[hsl(var(--success))];
+}
+.border-warning {
+  @apply border-[hsl(var(--warning))];
+}
+.border-muted {
+  @apply border-[hsl(var(--muted))];
+}
+.border-card {
+  @apply border-[hsl(var(--card))];
+}
+.border-popover {
+  @apply border-[hsl(var(--popover))];
+}
+.border-background {
+  @apply border-[hsl(var(--background))];
+}
+.border-foreground {
+  @apply border-[hsl(var(--foreground))];
+}
+
+/* Status Indicators */
+.status-running {
+  @apply bg-blue-500;
+}
+.status-completed {
+  @apply bg-green-500;
+}
+.status-error {
+  @apply bg-red-500;
+}
+.status-pending {
+  @apply bg-yellow-500;
+}
+.status-processing {
+  @apply bg-purple-500;
+}
+
+/* Hover States */
+.hover-primary {
+  @apply hover:bg-[hsl(var(--primary)/0.9)];
+}
+.hover-secondary {
+  @apply hover:bg-[hsl(var(--secondary)/0.9)];
+}
+.hover-accent {
+  @apply hover:bg-[hsl(var(--accent-color)/0.9)];
+}
+.hover-success {
+  @apply hover:bg-[hsl(var(--success-hover))];
+}
+.hover-warning {
+  @apply hover:bg-[hsl(var(--warning-hover))];
+}
+.hover-error {
+  @apply hover:bg-[hsl(var(--error-hover))];
+}
+.hover-destructive {
+  @apply hover:bg-[hsl(var(--error-hover))];
+}
+
+/* State Variants */
+.state-info {
+  @apply bg-[hsl(var(--info))] text-[hsl(var(--info-foreground))];
+}
+.state-muted-light {
+  @apply bg-[hsl(var(--muted-light))];
+}
+.state-muted-dark {
+  @apply bg-[hsl(var(--muted-dark))];
+}
+
+/* Border Variants */
+.border-info {
+  @apply border-[hsl(var(--info))];
+}
+.border-success-hover {
+  @apply border-[hsl(var(--success-hover))];
+}
+.border-warning-hover {
+  @apply border-[hsl(var(--warning-hover))];
+}
+.border-error-hover {
+  @apply border-[hsl(var(--error-hover))];
+}

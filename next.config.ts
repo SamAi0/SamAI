@@ -1,0 +1,24 @@
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
+  // Explicitly set workspace root to silence lockfile warnings
+  outputFileTracingRoot: __dirname,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'github.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
+}
+
+export default nextConfig
