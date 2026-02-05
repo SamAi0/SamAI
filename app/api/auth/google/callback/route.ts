@@ -9,14 +9,17 @@ import { nanoid } from 'nanoid'
 
 // Debug environment variables at module load
 console.log('[Google OAuth] Environment check at startup:')
-console.log('[Google OAuth] GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? `${process.env.GOOGLE_CLIENT_ID.substring(0, 20)}...` : 'NOT SET')
+console.log(
+  '[Google OAuth] GOOGLE_CLIENT_ID:',
+  process.env.GOOGLE_CLIENT_ID ? `${process.env.GOOGLE_CLIENT_ID.substring(0, 20)}...` : 'NOT SET',
+)
 console.log('[Google OAuth] GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET (hidden)' : 'NOT SET')
 
 export async function GET(req: NextRequest): Promise<Response> {
   console.log('[Google Callback] Starting OAuth callback processing')
   console.log('[Google Callback] GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID)
   console.log('[Google Callback] GOOGLE_CLIENT_SECRET exists:', !!process.env.GOOGLE_CLIENT_SECRET)
-  
+
   const code = req.nextUrl.searchParams.get('code')
   const state = req.nextUrl.searchParams.get('state')
   const cookieStore = await cookies()
@@ -41,7 +44,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       code: !!code,
       state: !!state,
       stateMatch: storedState === state,
-      redirectTo: !!storedRedirectTo
+      redirectTo: !!storedRedirectTo,
     })
     return new Response('Invalid OAuth state', {
       status: 400,
@@ -74,7 +77,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     console.log('[Google Callback] Exchange request details:', {
       code: code ? `${code.substring(0, 10)}...` : 'null',
       clientId: clientId ? `${clientId.substring(0, 10)}...` : 'null',
-      redirectUri: `${req.nextUrl.origin}/api/auth/google/callback`
+      redirectUri: `${req.nextUrl.origin}/api/auth/google/callback`,
     })
 
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -92,7 +95,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     })
 
     console.log('[Google Callback] Token exchange response status:', tokenResponse.status)
-    
+
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text()
       console.error('[Google Callback] Token exchange failed with status:', tokenResponse.status)
@@ -116,7 +119,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       scope: tokenData.scope,
       tokenType: tokenData.token_type,
       expiresIn: tokenData.expires_in,
-      hasError: !!tokenData.error
+      hasError: !!tokenData.error,
     })
 
     if (tokenData.error) {

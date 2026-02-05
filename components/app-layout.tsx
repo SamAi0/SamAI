@@ -190,24 +190,23 @@ export function AppLayout({ children, initialSidebarWidth, initialSidebarOpen, i
   }, [toggleSidebar])
 
   const fetchTasks = async () => {
-  try {
-    const response = await fetch('/api/tasks', {
-      credentials: 'include',
-    })
+    try {
+      const response = await fetch('/api/tasks', {
+        credentials: 'include',
+      })
 
-    if (response.ok) {
-      const data = await response.json()
-      setTasks(data.tasks)
-    } else if (response.status === 401) {
-      setTasks([])
+      if (response.ok) {
+        const data = await response.json()
+        setTasks(data.tasks)
+      } else if (response.status === 401) {
+        setTasks([])
+      }
+    } catch (error) {
+      console.error('Error fetching tasks:', error)
+    } finally {
+      setIsLoading(false)
     }
-  } catch (error) {
-    console.error('Error fetching tasks:', error)
-  } finally {
-    setIsLoading(false)
   }
-}
-
 
   const addTaskOptimistically = (taskData: {
     prompt: string

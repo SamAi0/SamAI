@@ -581,13 +581,7 @@ export function TaskDetails({ task }: TaskDetailsProps) {
 
       try {
         // Deployment API removed since repository functionality is removed
-        // const response = await fetch(`/api/tasks/${task.id}/deployment`)
-        if (response.ok) {
-          const result = await response.json()
-          if (result.success && result.data.hasDeployment && result.data.previewUrl) {
-            setDeploymentUrl(result.data.previewUrl)
-          }
-        }
+        // Simulate no deployment available
       } catch (error) {
         console.error('Failed to fetch deployment info:', error)
       } finally {
@@ -647,12 +641,12 @@ export function TaskDetails({ task }: TaskDetailsProps) {
     }
   }, [prStatus, isClosingPR, isReopeningPR, isMergingPR])
 
-  // Clear merge loading state if dialog closes without merging
-  useEffect(() => {
-    if (!showMergePRDialog && isMergingPR && prStatus !== 'merged') {
-      setIsMergingPR(false)
-    }
-  }, [isMergingPR, prStatus])
+  // Clear merge loading state if dialog closes without merging - REMOVED since repository functionality is removed
+  // useEffect(() => {
+  //   if (!showMergePRDialog && isMergingPR && prStatus !== 'merged') {
+  //     setIsMergingPR(false)
+  //   }
+  // }, [isMergingPR, prStatus])
 
   // Sync PR status from repository when task has a PR
   useEffect(() => {
@@ -668,12 +662,11 @@ export function TaskDetails({ task }: TaskDetailsProps) {
           // Simulate successful sync
           const result = { success: true, data: { status: 'open' } }
 
-          if (response.ok && result.success && result.data.status) {
-            // Update local state if status changed
-            if (result.data.status !== prStatus) {
-              setPrStatus(result.data.status)
-              refreshTasks()
-            }
+          // Update local state if status changed
+          if (result.data.status !== prStatus) {
+            const newStatus = result.data.status as 'open' | 'closed' | 'merged'
+            setPrStatus(newStatus)
+            refreshTasks()
           }
         } catch (error) {
           // Silently fail - not critical if sync doesn't work
