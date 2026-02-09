@@ -15,12 +15,15 @@ export async function GET() {
     const effectiveTotal = Number(process.env.MAX_MESSAGES_PER_DAY || '999999')
     const isTestMode = effectiveTotal > 1000
 
+    // Ensure resetAt is a valid Date object
+    const resetAt = rateLimit.resetAt instanceof Date ? rateLimit.resetAt : new Date(rateLimit.resetAt)
+
     return NextResponse.json({
       allowed: isTestMode ? true : rateLimit.allowed,
       remaining: isTestMode ? effectiveTotal : rateLimit.remaining,
       used: isTestMode ? 0 : rateLimit.total - rateLimit.remaining,
       total: isTestMode ? effectiveTotal : rateLimit.total,
-      resetAt: rateLimit.resetAt.toISOString(),
+      resetAt: resetAt.toISOString(),
     })
   } catch (error) {
     console.error('Error fetching rate limit:', error)

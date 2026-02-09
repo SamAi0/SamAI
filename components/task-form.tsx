@@ -272,7 +272,22 @@ export function TaskForm({
         return
       }
 
-      const ollamaData = await ollamaCheck.json()
+      let ollamaData;
+      try {
+        ollamaData = await ollamaCheck.json()
+      } catch (parseError) {
+        console.error('JSON parsing error for Ollama health check:', parseError)
+        console.error('Ollama check status:', ollamaCheck.status)
+        console.error('Ollama check headers:', Object.fromEntries(ollamaCheck.headers.entries()))
+        
+        // Try to get text response to see what's actually being returned
+        const textResponse = await ollamaCheck.text()
+        console.error('Ollama raw response:', textResponse.substring(0, 500)) // First 500 chars
+        
+        toast.error('Ollama service error: Invalid response format')
+        return
+      }
+      
       if (!ollamaData.connected) {
         toast.error('Ollama service is not connected', {
           description: 'Please ensure Ollama is running on http://localhost:11434',
@@ -312,7 +327,21 @@ export function TaskForm({
     if (selectedAgent !== 'multi-agent') {
       try {
         const response = await fetch(`/api/api-keys/check?agent=${selectedAgent}&model=${selectedModel}`)
-        const data = await response.json()
+        let data;
+        try {
+          data = await response.json()
+        } catch (parseError) {
+          console.error('JSON parsing error for API key check:', parseError)
+          console.error('API key check status:', response.status)
+          console.error('API key check headers:', Object.fromEntries(response.headers.entries()))
+          
+          // Try to get text response to see what's actually being returned
+          const textResponse = await response.text()
+          console.error('API key check raw response:', textResponse.substring(0, 500))
+          
+          // Don't show error to user, just continue (might be unauthenticated)
+          throw new Error('Invalid JSON response')
+        }
 
         if (!data.hasKey) {
           // Show error message with provider name

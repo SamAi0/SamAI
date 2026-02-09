@@ -426,7 +426,23 @@ export function TaskChat({ taskId, task }: TaskChatProps) {
         }),
       })
 
-      const data = await response.json()
+      let data;
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        console.error('JSON parsing error for /api/tasks/[taskId]/continue:', parseError)
+        console.error('Response status:', response.status)
+        console.error('Response headers:', Object.fromEntries(response.headers.entries()))
+        
+        // Try to get text response to see what's actually being returned
+        const textResponse = await response.text()
+        console.error('Raw response:', textResponse.substring(0, 500)) // First 500 chars
+        
+        toast.error('Server error: Invalid response format')
+        setNewMessage(messageToSend) // Restore the message on error
+        setIsSending(false)
+        return
+      }
 
       if (!response.ok) {
         toast.error(data.error || 'Failed to send message')
@@ -451,7 +467,22 @@ export function TaskChat({ taskId, task }: TaskChatProps) {
       })
 
       if (!ollamaResponse.ok) {
-        const errorData = await ollamaResponse.json()
+        let errorData;
+        try {
+          errorData = await ollamaResponse.json()
+        } catch (parseError) {
+          console.error('JSON parsing error for Ollama response:', parseError)
+          console.error('Ollama response status:', ollamaResponse.status)
+          console.error('Ollama response headers:', Object.fromEntries(ollamaResponse.headers.entries()))
+          
+          // Try to get text response to see what's actually being returned
+          const textResponse = await ollamaResponse.text()
+          console.error('Ollama raw response:', textResponse.substring(0, 500)) // First 500 chars
+          
+          toast.error('Ollama service error: Invalid response format')
+          setIsSending(false)
+          return
+        }
         toast.error(errorData.error || 'Failed to get response from Ollama')
         setIsSending(false)
         return
@@ -499,7 +530,10 @@ export function TaskChat({ taskId, task }: TaskChatProps) {
                     break
                   }
                 } catch (e) {
-                  // Not a JSON line, skip
+                  // Log non-JSON lines for debugging but don't show to user
+                  if (line.trim() && !line.startsWith('<!DOCTYPE') && !line.startsWith('<html')) {
+                    console.debug('Skipping non-JSON line in stream:', line.substring(0, 100))
+                  }
                 }
               }
             }

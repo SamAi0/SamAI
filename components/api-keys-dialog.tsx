@@ -51,14 +51,18 @@ export function ApiKeysDialog({ open, onOpenChange }: ApiKeysDialogProps) {
   const fetchApiKeys = async () => {
     try {
       const response = await fetch('/api/api-keys')
-      const data = await response.json()
+      // Check if the response is JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json()
 
-      if (data.success) {
-        const saved = new Set<Provider>()
-        data.apiKeys.forEach((key: { provider: Provider }) => {
-          saved.add(key.provider)
-        })
-        setSavedKeys(saved)
+        if (data.success) {
+          const saved = new Set<Provider>()
+          data.apiKeys.forEach((key: { provider: Provider }) => {
+            saved.add(key.provider)
+          })
+          setSavedKeys(saved)
+        }
       }
     } catch (error) {
       console.error('Error fetching API keys:', error)
@@ -95,8 +99,13 @@ export function ApiKeysDialog({ open, onOpenChange }: ApiKeysDialogProps) {
         })
         setApiKeys((prev) => ({ ...prev, [provider]: '' }))
       } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to save API key')
+        // Check if the response is JSON before parsing
+        const contentType = response.headers.get('content-type');
+        let error = { error: 'Failed to save API key' };
+        if (contentType && contentType.includes('application/json')) {
+          error = await response.json();
+        }
+        toast.error(error.error || 'Failed to save API key');
       }
     } catch (error) {
       console.error('Error saving API key:', error)
@@ -126,8 +135,13 @@ export function ApiKeysDialog({ open, onOpenChange }: ApiKeysDialogProps) {
           return newSet
         })
       } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to delete API key')
+        // Check if the response is JSON before parsing
+        const contentType = response.headers.get('content-type');
+        let error = { error: 'Failed to delete API key' };
+        if (contentType && contentType.includes('application/json')) {
+          error = await response.json();
+        }
+        toast.error(error.error || 'Failed to delete API key');
       }
     } catch (error) {
       console.error('Error deleting API key:', error)

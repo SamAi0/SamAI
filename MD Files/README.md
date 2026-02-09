@@ -25,6 +25,17 @@ You can deploy your own version of the SamAi0 with one click:
 - **Task Management**: Track task progress with real-time updates
 - **Persistent Storage**: Tasks stored in PostgreSQL database
 - **AI-Generated Branch Names**: Automatically generates descriptive Git branch names using local Ollama models
+- **Advanced Three-Panel UI Layout**: Flexible workspace with project tree, file editor, and chat command center
+- **Interactive Project Tree**: File explorer with live status updates and visual indicators (🟢 new, 🟡 modified, 🔴 deleted, ⚪ unchanged files)
+- **Enhanced File Editor**: Dual view modes (editor/diff), syntax highlighting, and AI change visualization with read-only protection until user approval
+- **AI Change Visualization**: Color-coded diff views showing exactly what the AI changed with line-by-line comparison
+- **Chat Command Center**: Natural language AI interaction hub with action plan visualization and consequence analysis before execution
+- **Smart Accept/Reject Workflow**: Built-in approval system with detailed previews and one-click acceptance/rejection
+- **Ollama Health Monitoring**: Real-time system stability checks with automatic status updates and graceful degradation when unavailable
+- **Trust System with Change Approval**: Memory-first approach with explicit user approval required for all file changes, including detailed diff previews
+- **Framework-Aware File Creation**: Intelligent file creation with proper naming conventions and location suggestions based on project structure
+- **Context-Aware AI Processing**: Enhanced understanding of project structure and framework conventions for smarter code generation
+- **Demo Access**: Interactive demonstration available at `/phase5-demo` with sample data and workflows
 
 ## Tech Stack
 
@@ -184,6 +195,53 @@ These are set once by you (the app developer) and are used for core infrastructu
 - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: Your Google OAuth app client ID (exposed to client)
 - `GOOGLE_CLIENT_SECRET`: Your Google OAuth app client secret
 - `NEXT_PUBLIC_AUTH_PROVIDERS`: Set to `"google"`
+
+## Recent Updates
+
+### Latest Features & Enhancements
+
+#### Phase 7: Cursor-Like Experience
+- **Framework-Aware File Creation**: Intelligent file creation with proper naming conventions and location suggestions based on project structure
+- **Context-Aware AI Processing**: Enhanced understanding of project structure and framework conventions for smarter code generation
+- **Safety System**: Confirmation dialogs for major changes with clear impact visualization
+- **Smart Suggestions**: Location and naming recommendations based on project conventions
+
+#### Phase 6: Model & System Stability
+- **Ollama Health Monitoring**: Real-time system stability checks with automatic status updates
+- **Smart Chat Input**: Automatic disable when Ollama is unavailable with clear error messaging
+- **Stable Chat Command Center**: Enhanced with built-in health status indicators
+- **Performance Optimization**: Efficient monitoring with configurable polling intervals
+
+#### Phase 5: Enhanced UI Experience
+- **Project Tree Component**: Interactive file explorer with live status updates and visual indicators
+  - Color-coded status badges: 🟢 New files (green plus icon), 🟡 Modified files (yellow edit icon), 🔴 Deleted files (red minus icon), ⚪ Unchanged files (gray file icon)
+  - Expandable/collapsible directory structure with live status updates after accept/reject
+  - File selection and refresh capabilities
+- **Enhanced File Editor**: Dual view modes (editor/diff), syntax highlighting, and AI change visualization
+  - Switch between code editor and diff visualization modes
+  - Read-only protection before user accepts changes with clear visual indicators
+  - Built-in accept/reject workflow controls directly in the editor
+  - AI change highlighting with color-coded line indicators (green = added, red = removed)
+- **Chat Command Center**: Natural language AI interaction hub with action plan visualization
+  - Plan-based interaction with structured action plans from AI
+  - Consequence visualization showing potential impacts of changes
+  - File impact preview displaying exactly which files will be modified
+  - Confidence scoring for proposed changes and controlled execution workflow
+- **Trust System Integration**: Read-only protection and explicit approval workflow
+  - No automatic file modifications - user approval required
+  - Detailed diff previews for all proposed changes
+  - Accept/reject controls integrated into the UI workflow
+- **Virtual Scrolling**: Efficient rendering of large file trees with optimized React re-renders
+- **Three-Panel Layout**: Flexible workspace with configurable panel visibility and sizing
+  - Left panel: Project tree navigation
+  - Center panel: File editor with diff visualization
+  - Right panel: Chat command center for AI interaction
+
+#### Phase 4: Trust System & Change Approval
+- **Memory-First Approach**: Changes exist only in memory until explicitly accepted
+- **Detailed Diff Previews**: Line-by-line visualization of all proposed changes
+- **Explicit User Approval**: No automatic file changes - user must approve all modifications
+- **Complete Auditing**: Full trail of all operations and decisions
 
 ## Version History
 

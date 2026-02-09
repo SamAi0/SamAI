@@ -15,7 +15,22 @@ export function useTask(taskId: string) {
     try {
       const response = await fetch(`/api/tasks/${taskId}`)
       if (response.ok) {
-        const data = await response.json()
+        let data;
+        try {
+          data = await response.json()
+        } catch (parseError) {
+          console.error('JSON parsing error for task fetch:', parseError)
+          console.error('Task response status:', response.status)
+          console.error('Task response headers:', Object.fromEntries(response.headers.entries()))
+          
+          // Try to get text response to see what's actually being returned
+          const textResponse = await response.text()
+          console.error('Task raw response:', textResponse.substring(0, 500))
+          
+          setError('Invalid server response format')
+          errorOccurred = true
+          return
+        }
         setTask(data.task)
         setError(null)
         hasFoundTaskRef.current = true
