@@ -13,6 +13,7 @@ import { getEnabledAuthProviders } from '@/lib/auth/providers'
 import { useSetAtom } from 'jotai'
 import { taskPromptAtom } from '@/lib/atoms/task'
 import { HomePageMobileFooter } from '@/components/home-page-mobile-footer'
+import Link from 'next/link'
 
 interface HomePageContentProps {
   initialInstallDependencies?: boolean

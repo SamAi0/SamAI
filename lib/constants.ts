@@ -11,6 +11,7 @@ export const AGENT_MODELS = {
     { value: 'mistral', label: 'Mistral' },
     { value: 'phi3', label: 'Phi-3' },
     { value: 'mixtral', label: 'Mixtral' },
+    { value: 'deepseek-coder:6.7b-instruct-q4_K_M', label: 'DeepSeek Coder 6.7B' },
   ],
 } as const
 

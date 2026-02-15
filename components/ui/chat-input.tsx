@@ -124,13 +124,13 @@ export function ChatInput({
             placeholder={getPlaceholder()}
             className={cn(
               "min-h-[44px] max-h-32 resize-none pr-12",
-              !isHealthy && "bg-gray-50 border-gray-300"
+              !isHealthy && "bg-muted border-border"
             )}
             disabled={isInputDisabled}
           />
           
           {/* Character counter */}
-          <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+          <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
             {inputValue.length}/1000
           </div>
         </div>
@@ -182,16 +182,16 @@ export function ChatInput({
       )}
 
       {/* Connection Status Indicator */}
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
           {isHealthy ? (
             <>
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-foreground rounded-full"></div>
               <span>Ollama connected</span>
             </>
           ) : (
             <>
-              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-foreground rounded-full opacity-60"></div>
               <span>Ollama disconnected</span>
             </>
           )}
@@ -199,7 +199,7 @@ export function ChatInput({
         
         {isSending && (
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-foreground rounded-full animate-pulse"></div>
             <span>Sending...</span>
           </div>
         )}

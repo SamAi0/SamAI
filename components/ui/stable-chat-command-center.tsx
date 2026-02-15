@@ -53,12 +53,12 @@ function ChatMessageItem({ message }: { message: ChatMessage }) {
   return (
     <div className={cn(
       "flex gap-3 py-4 px-4",
-      isUser && "bg-blue-50"
+      isUser && "bg-muted"
     )}>
       {/* Avatar */}
       <div className={cn(
         "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-        isUser ? "bg-blue-500" : "bg-gray-200"
+        isUser ? "bg-primary" : "bg-muted"
       )}>
         {isUser ? (
           <User className="w-4 h-4 text-white" />
@@ -74,11 +74,11 @@ function ChatMessageItem({ message }: { message: ChatMessage }) {
           <span className="font-medium text-sm">
             {isUser ? 'You' : 'AI Assistant'}
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             {message.timestamp.toLocaleTimeString()}
           </span>
           {message.status === 'pending' && (
-            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            <Badge variant="secondary">
               <Clock className="w-3 h-3 mr-1" />
               Thinking...
             </Badge>

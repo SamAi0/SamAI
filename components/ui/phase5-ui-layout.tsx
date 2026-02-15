@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { ProjectTree, FileNode } from './project-tree'
 import { FileEditor, FileContent } from './file-editor'
-import { StableChatCommandCenter, ChatMessage, ActionPlan } from './stable-chat-command-center'
+import { EnhancedChatCommandCenter, ChatMessage, ActionPlan, GeneratedCodeBlock } from './enhanced-chat-command-center'
 import { 
   PanelLeft, 
   PanelRight, 
@@ -23,6 +23,11 @@ interface Phase6UILayoutProps {
   initialFiles?: FileNode[]
   initialMessages?: ChatMessage[]
   ollamaUrl?: string
+  onSendMessage?: (content: string) => void
+  onExecutePlan?: (plan: ActionPlan) => void
+  onRejectPlan?: (plan: ActionPlan) => void
+  onCreateFile?: (filePath: string, content: string) => void
+  onMoveToProjectTree?: (codeBlocks: GeneratedCodeBlock[]) => void
 }
 
 // Layout configuration
@@ -39,7 +44,12 @@ export function Phase6UILayout({
   className,
   initialFiles = [],
   initialMessages = [],
-  ollamaUrl = 'http://127.0.0.1:11434'
+  ollamaUrl = 'http://127.0.0.1:11434',
+  onSendMessage,
+  onExecutePlan,
+  onRejectPlan,
+  onCreateFile,
+  onMoveToProjectTree
 }: Phase6UILayoutProps) {
   // State management
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({
@@ -225,6 +235,123 @@ export function Phase6UILayout({
     // In real implementation, this would dismiss the plan
   }
 
+  // Create file handler
+  const handleCreateFile = (filePath: string, content: string) => {
+    console.log('Creating file:', filePath)
+    // In real implementation, this would create the file in the virtual filesystem
+  }
+
+  // Move to project tree handler with real-time updates and actual file creation
+  const handleMoveToProjectTree = async (codeBlocks: GeneratedCodeBlock[]) => {
+    console.log('Moving code blocks to project tree:', codeBlocks)
+    
+    // Actually create the files via API
+    for (const block of codeBlocks) {
+      try {
+        const response = await fetch(`/api/tasks/demo-task/create-file`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filename: block.filePath,
+            content: block.content,
+          }),
+        });
+
+        // Check if response is OK before trying to parse JSON
+        if (!response.ok) {
+          console.error('API Error Response:', response.status, response.statusText);
+          // Still continue with UI update even if API fails
+          continue;
+        }
+
+        // Try to parse JSON, but handle case where HTML is returned
+        let result;
+        try {
+          result = await response.json();
+        } catch (parseError) {
+          console.error('Failed to parse JSON response:', parseError);
+          console.error('Response status:', response.status);
+          console.error('Response headers:', Object.fromEntries(response.headers));
+          // Still continue with UI update
+          continue;
+        }
+
+        console.log('File creation result:', result);
+        
+        if (!result.success) {
+          console.error('Failed to create file:', result.error);
+        }
+      } catch (error) {
+        console.error('Error creating file:', error);
+        // Continue with UI update even if API fails
+      }
+    }
+    
+    // Update the file tree with the new/modified files
+    let updatedFiles = [...files];
+    let newlyAddedFile: FileNode | null = null;
+    
+    codeBlocks.forEach(block => {
+      // Check if file already exists in the tree
+      const fileExists = updatedFiles.some(file => file.path === block.filePath && file.type === 'file');
+      
+      if (fileExists) {
+        // If file exists, update its status to 'modified'
+        updatedFiles = updateFileStatus(updatedFiles, block.filePath, 'modified');
+      } else {
+        // If file doesn't exist, add it as a new file
+        const newFileNode: FileNode = {
+          id: `file_${Date.now()}_${block.filePath}`,
+          name: block.fileName,
+          path: block.filePath,
+          type: 'file',
+          status: 'new'
+        };
+        
+        // Add the new file to the appropriate directory in the tree
+        updatedFiles = addFileToTree(updatedFiles, newFileNode);
+        newlyAddedFile = newFileNode;
+      }
+    });
+    
+    // Update the files state
+    setFiles(updatedFiles);
+    
+    // If a new file was added, automatically select it after a short delay
+    // to allow the tree to re-render
+    if (newlyAddedFile) {
+      setTimeout(() => {
+        // Find the newly added file in the updated tree
+        const findFileInTree = (nodes: FileNode[], filePath: string): FileNode | null => {
+          for (const node of nodes) {
+            if (node.path === filePath && node.type === 'file') {
+              return node;
+            }
+            if (node.children) {
+              const found = findFileInTree(node.children, filePath);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+        
+        if (newlyAddedFile) {
+          const fileToSelect = findFileInTree(updatedFiles, newlyAddedFile.path);
+          if (fileToSelect) {
+            setSelectedFile(fileToSelect);
+            handleFileSelect(fileToSelect);
+          }
+        }
+      }, 100);
+    }
+    
+    // Show success message
+    const fileNames = codeBlocks.map(cb => cb.fileName).join(', ');
+    console.log(`Successfully added/updated files: ${fileNames}`);
+  }
+
   // Refresh files handler
   const handleRefreshFiles = () => {
     console.log('Refreshing file tree')
@@ -323,6 +450,41 @@ export default App;`,
     })
   }
 
+  // Add a file to the tree in the appropriate directory
+  const addFileToTree = (nodes: FileNode[], newFile: FileNode): FileNode[] => {
+    // Split the file path to determine the directory structure
+    const pathParts = newFile.path.split('/');
+    const directoryPath = pathParts.slice(0, -1).join('/'); // Get the directory path without the file name
+    
+    // If the file should be in the root directory
+    if (pathParts.length <= 1) {
+      return [...nodes, newFile];
+    }
+    
+    // Recursively traverse the tree to find the appropriate directory
+    const addToDirectory = (currentNodes: FileNode[], targetDir: string): FileNode[] => {
+      return currentNodes.map(node => {
+        if (node.path === targetDir && node.type === 'directory') {
+          // Found the target directory, add the file to it
+          return {
+            ...node,
+            children: node.children ? [...node.children, newFile] : [newFile],
+            isExpanded: true // Expand the directory to show the new file
+          };
+        } else if (node.children && node.type === 'directory') {
+          // Continue searching in the children
+          return {
+            ...node,
+            children: addToDirectory(node.children, targetDir)
+          };
+        }
+        return node;
+      });
+    };
+    
+    return addToDirectory(nodes, directoryPath);
+  }
+
   // Calculate panel widths
   const centerPanelWidth = 100 - 
     (layoutConfig.showLeftPanel ? layoutConfig.leftPanelWidth : 0) - 
@@ -415,12 +577,13 @@ export default App;`,
             className="border-l bg-white flex flex-col"
             style={{ width: `${layoutConfig.rightPanelWidth}%` }}
           >
-            <StableChatCommandCenter
+            <EnhancedChatCommandCenter
               messages={messages}
-              onSendMessage={handleSendMessage}
-              onExecutePlan={handleExecutePlan}
-              onRejectPlan={handleRejectPlan}
-              ollamaUrl={ollamaUrl}
+              onSendMessage={onSendMessage || handleSendMessage}
+              onExecutePlan={onExecutePlan || handleExecutePlan}
+              onRejectPlan={onRejectPlan || handleRejectPlan}
+              onCreateFile={onCreateFile || handleCreateFile}
+              onMoveToProjectTree={onMoveToProjectTree || handleMoveToProjectTree}
             />
           </div>
         )}

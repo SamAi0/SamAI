@@ -39,20 +39,20 @@ interface ProjectTreeProps {
 function FileIcon({ node }: { node: FileNode }) {
   if (node.type === 'directory') {
     return node.isExpanded ? 
-      <FolderOpen className="w-4 h-4 text-blue-500" /> : 
-      <Folder className="w-4 h-4 text-blue-500" />
+      <FolderOpen className="w-4 h-4 text-muted-foreground" /> : 
+      <Folder className="w-4 h-4 text-muted-foreground" />
   }
   
   // Status-based file icons
   switch (node.status) {
     case 'new':
-      return <FilePlus className="w-4 h-4 text-green-500" />
+      return <FilePlus className="w-4 h-4 text-muted-foreground" />
     case 'modified':
-      return <FileEdit className="w-4 h-4 text-yellow-500" />
+      return <FileEdit className="w-4 h-4 text-muted-foreground" />
     case 'deleted':
-      return <FileMinus className="w-4 h-4 text-red-500" />
+      return <FileMinus className="w-4 h-4 text-muted-foreground" />
     default:
-      return <FileText className="w-4 h-4 text-gray-500" />
+      return <FileText className="w-4 h-4 text-muted-foreground" />
   }
 }
 
@@ -89,7 +89,7 @@ function TreeNode({
       <div 
         className={cn(
           "flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-100 cursor-pointer transition-colors",
-          node.isSelected && "bg-blue-50 border-l-2 border-blue-500"
+          node.isSelected && "bg-muted border-l-2 border-border"
         )}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={() => onSelect(node)}
@@ -121,7 +121,7 @@ function TreeNode({
       </div>
       
       {hasChildren && node.isExpanded && (
-        <div className="border-l border-gray-200 ml-3">
+        <div className="border-l border-border ml-3">
           {node.children?.map(child => (
             <TreeNode
               key={child.id}
@@ -287,24 +287,24 @@ export function ProjectTree({
       </div>
 
       {/* Footer Stats */}
-      <div className="p-2 border-t text-xs text-gray-500">
+      <div className="p-2 border-t text-xs text-muted-foreground">
         <div className="flex justify-between">
           <span>Files: {files.filter(f => f.type === 'file').length}</span>
           <span>Dirs: {files.filter(f => f.type === 'directory').length}</span>
         </div>
         <div className="flex gap-2 mt-1">
           {files.some(f => f.status === 'new') && (
-            <Badge variant="secondary" className="text-green-600 bg-green-50">
+            <Badge variant="secondary" className="text-foreground bg-muted">
               {files.filter(f => f.status === 'new').length} new
             </Badge>
           )}
           {files.some(f => f.status === 'modified') && (
-            <Badge variant="secondary" className="text-yellow-600 bg-yellow-50">
+            <Badge variant="secondary" className="text-foreground bg-muted">
               {files.filter(f => f.status === 'modified').length} modified
             </Badge>
           )}
           {files.some(f => f.status === 'deleted') && (
-            <Badge variant="secondary" className="text-red-600 bg-red-50">
+            <Badge variant="secondary" className="text-foreground bg-muted">
               {files.filter(f => f.status === 'deleted').length} deleted
             </Badge>
           )}

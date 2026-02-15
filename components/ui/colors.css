@@ -161,19 +161,19 @@
 
 /* Status Indicators */
 .status-running {
-  @apply bg-blue-500;
+  @apply bg-[hsl(var(--muted-light))];
 }
 .status-completed {
-  @apply bg-green-500;
+  @apply bg-[hsl(var(--muted))];
 }
 .status-error {
-  @apply bg-red-500;
+  @apply bg-[hsl(var(--muted-dark))];
 }
 .status-pending {
-  @apply bg-yellow-500;
+  @apply bg-[hsl(var(--muted-light))];
 }
 .status-processing {
-  @apply bg-purple-500;
+  @apply bg-[hsl(var(--muted))];
 }
 
 /* Hover States */

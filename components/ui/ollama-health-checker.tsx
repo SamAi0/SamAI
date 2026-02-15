@@ -261,18 +261,18 @@ export function OllamaHealthChecker({
   }
 
   return (
-    <div className={cn("p-4 bg-white rounded-lg border", className)}>
+    <div className={cn("p-4 bg-card rounded-lg border", className)}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Server className="w-5 h-5 text-gray-600" />
-          <h3 className="font-semibold text-gray-900">Ollama Status</h3>
+          <Server className="w-5 h-5 text-muted-foreground" />
+          <h3 className="font-semibold text-foreground">Ollama Status</h3>
         </div>
         
         <div className="flex items-center gap-2">
           {status.isHealthy ? (
-            <CheckCircle className="w-5 h-5 text-green-500" />
+            <CheckCircle className="w-5 h-5 text-muted-foreground" />
           ) : (
-            <AlertTriangle className="w-5 h-5 text-red-500" />
+            <AlertTriangle className="w-5 h-5 text-muted-foreground" />
           )}
           
           <Button
@@ -295,12 +295,9 @@ export function OllamaHealthChecker({
       <div className="space-y-3">
         {/* Connection Status */}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Connection</span>
+          <span className="text-sm text-muted-foreground">Connection</span>
           <span className={cn(
-            "text-sm font-medium px-2 py-1 rounded",
-            status.isHealthy 
-              ? "bg-green-100 text-green-800" 
-              : "bg-red-100 text-red-800"
+            "text-sm font-medium px-2 py-1 rounded bg-muted text-foreground"
           )}>
             {status.isHealthy ? 'Connected' : 'Disconnected'}
           </span>
@@ -309,8 +306,8 @@ export function OllamaHealthChecker({
         {/* Version Info */}
         {status.version && (
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Version</span>
-            <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+            <span className="text-sm text-muted-foreground">Version</span>
+            <span className="text-sm font-mono bg-muted px-2 py-1 rounded">
               {status.version}
             </span>
           </div>
@@ -319,7 +316,7 @@ export function OllamaHealthChecker({
         {/* Models Count */}
         {status.models && status.models.length > 0 && (
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Models Available</span>
+            <span className="text-sm text-muted-foreground">Models Available</span>
             <span className="text-sm font-medium">
               {status.models.length}
             </span>
@@ -328,8 +325,8 @@ export function OllamaHealthChecker({
 
         {/* Last Checked */}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Last Checked</span>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-muted-foreground">Last Checked</span>
+          <span className="text-sm text-muted-foreground">
             {formatLastChecked(status.lastChecked)}
           </span>
         </div>
@@ -337,10 +334,9 @@ export function OllamaHealthChecker({
         {/* Response Time */}
         {status.responseTime !== undefined && (
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Response Time</span>
+            <span className="text-sm text-muted-foreground">Response Time</span>
             <span className={cn(
-              "text-sm font-mono",
-              status.responseTime < 1000 ? "text-green-600" : "text-yellow-600"
+              "text-sm font-mono text-muted-foreground"
             )}>
               {status.responseTime}ms
             </span>
@@ -359,7 +355,7 @@ export function OllamaHealthChecker({
 
         {/* Connection Info */}
         <div className="pt-2 border-t">
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-muted-foreground">
             Connecting to: {ollamaUrl}
           </div>
         </div>

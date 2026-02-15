@@ -10,32 +10,28 @@ export function ColorDemo() {
       <Card>
         <CardHeader>
           <CardTitle>Color Palette Demo</CardTitle>
-          <CardDescription>Sample implementation of the new color scheme</CardDescription>
+          <CardDescription>Sample implementation of the latest color scheme</CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
-          {/* Primary Colors */}
+          {/* Primary & Accent Colors */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Primary Colors</h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <h3 className="text-lg font-semibold mb-4">Brand Colors</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
-                <div className="h-12 rounded-md bg-primary"></div>
-                <span className="text-xs text-muted-foreground">Primary</span>
+                <div className="h-12 rounded-md bg-primary" />
+                <span className="text-xs text-muted-foreground">Primary (Blue)</span>
               </div>
               <div className="space-y-2">
-                <div className="h-12 rounded-md bg-secondary"></div>
-                <span className="text-xs text-muted-foreground">Secondary</span>
+                <div className="h-12 rounded-md bg-accent" />
+                <span className="text-xs text-muted-foreground">Accent (Purple)</span>
               </div>
               <div className="space-y-2">
-                <div className="h-12 rounded-md bg-accent"></div>
-                <span className="text-xs text-muted-foreground">Accent</span>
+                <div className="h-12 rounded-md bg-success" />
+                <span className="text-xs text-muted-foreground">Success (Emerald)</span>
               </div>
               <div className="space-y-2">
-                <div className="h-12 rounded-md bg-success"></div>
-                <span className="text-xs text-muted-foreground">Success</span>
-              </div>
-              <div className="space-y-2">
-                <div className="h-12 rounded-md bg-warning"></div>
-                <span className="text-xs text-muted-foreground">Warning</span>
+                <div className="h-12 rounded-md bg-warning" />
+                <span className="text-xs text-muted-foreground">Warning (Warm)</span>
               </div>
             </div>
           </div>
@@ -78,32 +74,22 @@ export function ColorDemo() {
 
             <div className="p-4 rounded-lg bg-card text-card-foreground border border-border">
               <p className="font-medium">Card Component</p>
-              <p className="text-sm text-muted-foreground mt-1">This is a sample card using card colors</p>
+              <p className="text-sm text-muted-foreground mt-1">This uses the latest card and text colors.</p>
             </div>
 
             <div className="p-4 rounded-lg bg-muted text-muted-foreground">
               <p className="font-medium">Muted Section</p>
-              <p className="text-sm mt-1">This is a sample muted area</p>
+              <p className="text-sm mt-1">Muted background and foreground colors.</p>
             </div>
 
             <div className="p-4 rounded-lg bg-popover text-popover-foreground border border-border">
               <p className="font-medium">Popover Style</p>
-              <p className="text-sm text-muted-foreground mt-1">This demonstrates popover colors</p>
+              <p className="text-sm text-muted-foreground mt-1">Popover with border and muted text.</p>
             </div>
 
             <div className="p-4 rounded-lg state-info">
               <p className="font-medium">Info State</p>
-              <p className="text-sm mt-1">This demonstrates the new info color state</p>
-            </div>
-
-            <div className="p-4 rounded-lg state-muted-light border border-border">
-              <p className="font-medium">Muted Light State</p>
-              <p className="text-sm text-muted-foreground mt-1">This demonstrates the new muted light color state</p>
-            </div>
-
-            <div className="p-4 rounded-lg state-muted-dark border border-border">
-              <p className="font-medium">Muted Dark State</p>
-              <p className="text-sm text-muted-foreground mt-1">This demonstrates the new muted dark color state</p>
+              <p className="text-sm mt-1">This uses the info semantic color.</p>
             </div>
           </div>
         </CardContent>

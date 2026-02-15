@@ -52,12 +52,12 @@ function ChatMessageItem({ message }: { message: ChatMessage }) {
   return (
     <div className={cn(
       "flex gap-3 py-4 px-4",
-      isUser && "bg-blue-50"
+      isUser && "bg-muted"
     )}>
       {/* Avatar */}
       <div className={cn(
         "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-        isUser ? "bg-blue-500" : "bg-gray-200"
+        isUser ? "bg-primary" : "bg-muted"
       )}>
         {isUser ? (
           <User className="w-4 h-4 text-white" />
@@ -73,23 +73,23 @@ function ChatMessageItem({ message }: { message: ChatMessage }) {
           <span className="font-medium text-sm">
             {isUser ? 'You' : 'AI Assistant'}
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             {message.timestamp.toLocaleTimeString()}
           </span>
           {message.status === 'pending' && (
-            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            <Badge variant="secondary">
               <Clock className="w-3 h-3 mr-1" />
               Thinking...
             </Badge>
           )}
           {message.status === 'success' && (
-            <Badge variant="default" className="bg-green-100 text-green-800">
+            <Badge variant="default">
               <CheckCircle className="w-3 h-3 mr-1" />
               Completed
             </Badge>
           )}
           {message.status === 'error' && (
-            <Badge variant="destructive" className="bg-red-100 text-red-800">
+            <Badge variant="destructive">
               <AlertCircle className="w-3 h-3 mr-1" />
               Error
             </Badge>
@@ -97,7 +97,7 @@ function ChatMessageItem({ message }: { message: ChatMessage }) {
         </div>
         
         {/* Message content */}
-        <div className="text-sm text-gray-700 whitespace-pre-wrap">
+        <div className="text-sm text-foreground whitespace-pre-wrap">
           {message.content}
         </div>
         
@@ -154,13 +154,13 @@ function ActionPlanCard({
         {/* Consequences */}
         <div>
           <h5 className="font-medium text-sm text-gray-900 mb-2 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-yellow-500" />
+              <AlertCircle className="w-4 h-4 text-muted-foreground" />
             Potential Consequences
           </h5>
           <ul className="text-sm text-gray-600 space-y-1">
             {plan.consequences.map((consequence, index) => (
               <li key={index} className="flex items-start gap-2">
-                <span className="text-yellow-500 mt-1">•</span>
+                <span className="text-muted-foreground mt-1">•</span>
                 {consequence}
               </li>
             ))}
@@ -182,7 +182,7 @@ function ActionPlanCard({
         </div>
         
         {/* Estimated time */}
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="w-4 h-4" />
           <span>Estimated time: {plan.estimatedTime}</span>
         </div>
@@ -250,17 +250,17 @@ export function ChatCommandCenter({
   return (
     <div className={cn("flex flex-col h-full bg-white border", className)}>
       {/* Header */}
-      <div className="p-4 border-b bg-gray-50">
+      <div className="p-4 border-b bg-muted">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-gray-600" />
-            <h3 className="font-semibold text-gray-900">Command Center</h3>
+            <MessageSquare className="w-5 h-5 text-muted-foreground" />
+            <h3 className="font-semibold text-foreground">Command Center</h3>
           </div>
           <Badge variant="secondary" className="text-xs">
             {messages.length} messages
           </Badge>
         </div>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Chat with AI to plan and review code changes
         </p>
       </div>
@@ -269,11 +269,11 @@ export function ChatCommandCenter({
       <div className="flex-1 overflow-auto">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
-            <Bot className="w-16 h-16 text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <Bot className="w-16 h-16 text-muted-foreground/40 mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               Welcome to Command Center
             </h3>
-            <p className="text-gray-500 max-w-md">
+            <p className="text-muted-foreground max-w-md">
               Ask the AI to help you with code changes. It will analyze your request, 
               show you the planned actions, and let you review before executing.
             </p>
@@ -284,22 +284,22 @@ export function ChatCommandCenter({
               <ChatMessageItem key={message.id} message={message} />
             ))}
             {isLoading && (
-              <div className="flex gap-3 py-4 px-4 bg-gray-50">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-gray-600" />
+              <div className="flex gap-3 py-4 px-4 bg-muted">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-sm">AI Assistant</span>
-                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                    <Badge variant="secondary">
                       <Clock className="w-3 h-3 mr-1" />
                       Thinking...
                     </Badge>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                   </div>
                 </div>
               </div>

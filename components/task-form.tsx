@@ -396,26 +396,26 @@ export function TaskForm({
         <div className="flex items-center justify-center gap-2 mb-4">
           {ollamaStatus === 'checking' && (
             <>
-              <Circle className="h-4 w-4 text-yellow-500 animate-pulse" />
-              <span className="text-sm text-yellow-600">Checking Ollama...</span>
+              <Circle className="h-4 w-4 text-muted-foreground animate-pulse" />
+              <span className="text-sm text-muted-foreground">Checking Ollama...</span>
             </>
           )}
           {ollamaStatus === 'connected' && (
             <>
-              <CircleCheck className="h-4 w-4 text-green-500" />
-              <span className="text-sm text-green-600">Ollama Connected</span>
+              <CircleCheck className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Ollama Connected</span>
               {selectedModel &&
                 !availableModels.some(
                   (model) =>
                     model.toLowerCase().includes(selectedModel.toLowerCase()) ||
                     selectedModel.toLowerCase().includes(model.toLowerCase()),
-                ) && <span className="text-sm text-orange-500 ml-2">(Model not loaded)</span>}
+                ) && <span className="text-sm text-muted-foreground ml-2">(Model not loaded)</span>}
             </>
           )}
           {(ollamaStatus === 'disconnected' || ollamaStatus === 'error') && (
             <>
-              <CircleAlert className="h-4 w-4 text-red-500" />
-              <span className="text-sm text-red-600">Ollama Disconnected</span>
+              <CircleAlert className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Ollama Disconnected</span>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -458,13 +458,13 @@ export function TaskForm({
                 <span>Estimated tokens: {Math.ceil(prompt.length / 4)}</span>
               </div>
               {prompt.length > 4000 && (
-                <div className="flex items-center gap-1 text-orange-500">
+                <div className="flex items-center gap-1 text-muted-foreground">
                   <AlertTriangle className="h-3 w-3" />
                   <span>Long prompt - may be truncated</span>
                 </div>
               )}
               {prompt.length > 8000 && (
-                <div className="flex items-center gap-1 text-red-500">
+                <div className="flex items-center gap-1 text-muted-foreground">
                   <AlertTriangle className="h-3 w-3" />
                   <span>Very long prompt - will be truncated</span>
                 </div>
@@ -547,11 +547,17 @@ export function TaskForm({
                         <SelectValue placeholder="Select Model" className="truncate" />
                       </SelectTrigger>
                       <SelectContent>
-                        {AGENT_MODELS[selectedAgent as keyof typeof AGENT_MODELS]?.map((model) => (
+                        {/* Show both static models and dynamically available models */}
+                        {[
+                          ...(AGENT_MODELS[selectedAgent as keyof typeof AGENT_MODELS] || []),
+                          ...availableModels
+                            .filter(model => !AGENT_MODELS[selectedAgent as keyof typeof AGENT_MODELS]?.some(m => m.value === model))
+                            .map(model => ({ value: model, label: model }))
+                        ].map((model) => (
                           <SelectItem key={model.value} value={model.value}>
                             {model.label}
                           </SelectItem>
-                        )) || []}
+                        ))}
                       </SelectContent>
                     </Select>
                   )}

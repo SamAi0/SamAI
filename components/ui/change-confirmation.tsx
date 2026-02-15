@@ -42,17 +42,17 @@ interface ChangeConfirmationSystemProps {
 // Risk assessment levels
 const RISK_LEVELS = {
   low: { 
-    color: 'bg-green-100 text-green-800',
+    color: 'bg-muted text-foreground',
     icon: FileText,
     message: 'Low impact change'
   },
   medium: { 
-    color: 'bg-yellow-100 text-yellow-800', 
+    color: 'bg-muted text-foreground', 
     icon: AlertTriangle,
     message: 'Medium impact change'
   },
   high: { 
-    color: 'bg-red-100 text-red-800',
+    color: 'bg-muted text-foreground',
     icon: ShieldAlert,
     message: 'High impact change - requires confirmation'
   }
@@ -123,8 +123,8 @@ export function BigChangeConfirmationDialog({
         <div className="space-y-6">
           {/* Change Summary */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-            <p className="text-gray-600">{description}</p>
+            <h3 className="font-semibold text-foreground mb-2">{title}</h3>
+            <p className="text-muted-foreground">{description}</p>
           </div>
 
           {/* Risk Assessment */}
@@ -172,12 +172,12 @@ export function BigChangeConfirmationDialog({
           </div>
 
           {/* Impact Warning */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="bg-muted border border-border rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div>
-                <h4 className="font-medium text-yellow-800 mb-1">Important</h4>
-                <p className="text-yellow-700 text-sm">
+                <h4 className="font-medium text-foreground mb-1">Important</h4>
+                <p className="text-muted-foreground text-sm">
                   This change affects multiple files and/or folders. Please review the operations 
                   carefully before proceeding. Consider backing up your project if you're unsure.
                 </p>

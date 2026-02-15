@@ -94,39 +94,39 @@ export function Phase7CursorLikeFeatures({
   }
 
   return (
-    <div className={cn("flex flex-col h-full bg-gray-50", className)}>
+    <div className={cn("flex flex-col h-full bg-muted", className)}>
       {/* Header */}
-      <div className="p-4 border-b bg-white">
+      <div className="p-4 border-b bg-card">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Settings className="w-5 h-5 text-gray-600" />
-            <h2 className="font-semibold text-gray-900">Cursor-like Features</h2>
+            <Settings className="w-5 h-5 text-muted-foreground" />
+            <h2 className="font-semibold text-foreground">Cursor-like Features</h2>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
               {projectFiles.length} files
             </Badge>
             {projectContext?.framework && (
-              <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">
+              <Badge variant="default" className="text-xs">
                 {projectContext.framework}
               </Badge>
             )}
           </div>
         </div>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Intelligent context management and safety controls
         </p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex border-b bg-white">
+      <div className="flex border-b bg-card">
         <button
           onClick={() => setActiveTab('context')}
           className={cn(
-            "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors",
+            "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors border-transparent",
             activeTab === 'context'
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "border-primary text-foreground"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           <Brain className="w-4 h-4" />
@@ -135,10 +135,10 @@ export function Phase7CursorLikeFeatures({
         <button
           onClick={() => setActiveTab('confirmation')}
           className={cn(
-            "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors",
+            "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors border-transparent",
             activeTab === 'confirmation'
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "border-primary text-foreground"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           <ShieldAlert className="w-4 h-4" />
@@ -147,10 +147,10 @@ export function Phase7CursorLikeFeatures({
         <button
           onClick={() => setActiveTab('creator')}
           className={cn(
-            "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors",
+            "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors border-transparent",
             activeTab === 'creator'
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "border-primary text-foreground"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           <FolderPlus className="w-4 h-4" />
@@ -168,23 +168,23 @@ export function Phase7CursorLikeFeatures({
             />
             
             {/* Context Info Panel */}
-            <div className="mt-6 p-4 bg-white rounded-lg border">
-              <h3 className="font-medium text-gray-900 mb-3">Current Context Analysis</h3>
+            <div className="mt-6 p-4 bg-card rounded-lg border">
+              <h3 className="font-medium text-foreground mb-3">Current Context Analysis</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">Framework:</span>
+                  <span className="text-muted-foreground">Framework:</span>
                   <div className="font-medium mt-1">
                     {projectContext.framework || 'Not detected'}
                   </div>
                 </div>
                 <div>
-                  <span className="text-gray-500">Files in Context:</span>
+                  <span className="text-muted-foreground">Files in Context:</span>
                   <div className="font-medium mt-1">
                     {projectContext.relevantFiles.length}
                   </div>
                 </div>
                 <div>
-                  <span className="text-gray-500">Folder Depth:</span>
+                  <span className="text-muted-foreground">Folder Depth:</span>
                   <div className="font-medium mt-1">
                     {projectContext.folderStructure.length > 0 
                       ? Math.max(...projectContext.folderStructure.map(f => f.split('/').length))
@@ -196,7 +196,7 @@ export function Phase7CursorLikeFeatures({
               
               {projectContext.relevantFiles.length > 0 && (
                 <div className="mt-4">
-                  <span className="text-gray-500 text-sm">Sample relevant files:</span>
+                  <span className="text-muted-foreground text-sm">Sample relevant files:</span>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {projectContext.relevantFiles.slice(0, 5).map((file, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">
@@ -222,26 +222,26 @@ export function Phase7CursorLikeFeatures({
             />
             
             {/* Safety Guidelines */}
-            <div className="mt-6 p-4 bg-white rounded-lg border">
-              <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-yellow-600" />
+            <div className="mt-6 p-4 bg-card rounded-lg border">
+              <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-muted-foreground" />
                 Safety Guidelines
               </h3>
-              <ul className="text-sm text-gray-600 space-y-2">
+              <ul className="text-sm text-muted-foreground space-y-2">
                 <li className="flex items-start gap-2">
-                  <span className="text-yellow-500 mt-1">•</span>
+                  <span className="text-muted-foreground mt-1">•</span>
                   <span>Changes affecting multiple files require explicit confirmation</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-yellow-500 mt-1">•</span>
+                  <span className="text-muted-foreground mt-1">•</span>
                   <span>Folder deletions must be manually approved</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-yellow-500 mt-1">•</span>
+                  <span className="text-muted-foreground mt-1">•</span>
                   <span>Project-wide refactoring requires careful review</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-yellow-500 mt-1">•</span>
+                  <span className="text-muted-foreground mt-1">•</span>
                   <span>Always backup your project before major changes</span>
                 </li>
               </ul>

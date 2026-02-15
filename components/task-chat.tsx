@@ -694,14 +694,14 @@ Please address the above PR comment and make the necessary changes to ensure the
       const getStatusIcon = (status: string, conclusion: string | null) => {
         if (status === 'completed') {
           if (conclusion === 'success') {
-            return <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+            return <CheckCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           } else if (conclusion === 'failure') {
-            return <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+            return <AlertCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           } else if (conclusion === 'cancelled') {
             return <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           }
         } else if (status === 'in_progress') {
-          return <Loader2 className="h-4 w-4 text-blue-500 animate-spin flex-shrink-0" />
+          return <Loader2 className="h-4 w-4 text-muted-foreground animate-spin flex-shrink-0" />
         }
         return <Square className="h-4 w-4 text-muted-foreground flex-shrink-0" />
       }

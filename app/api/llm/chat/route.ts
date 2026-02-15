@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+vimport { NextRequest } from 'next/server'
 import { TokenLimiter, TOKEN_LIMITS } from '@/lib/utils/token-limiter'
 
 export async function POST(request: NextRequest) {
@@ -20,13 +20,16 @@ export async function POST(request: NextRequest) {
       if (modelsResponse.ok) {
         const modelsData = await modelsResponse.json()
         const availableModels = modelsData.models?.map((m: any) => m.name) || []
-
-        // Check if the requested model exists in Ollama
+            
+        // Add DeepSeek models to allowed list
+        const allowedModels = ['codellama', 'qwen', 'gemma3:1b', 'deepseek-coder:6.7b-instruct-q4_K_M']
+            
+        // Check if the requested model exists in Ollama or is in our allowed list
         const modelExists = availableModels.some(
           (availableModel: string) =>
             availableModel.toLowerCase().includes(model.toLowerCase()) ||
             model.toLowerCase().includes(availableModel.toLowerCase()),
-        )
+        ) || allowedModels.includes(model)
 
         if (!modelExists) {
           console.warn(`Requested model '${model}' not found in Ollama. Available models:`, availableModels)
