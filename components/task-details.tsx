@@ -100,8 +100,8 @@ export function TaskDetails({ task }: TaskDetailsProps) {
   const [optimisticStatus, setOptimisticStatus] = useState<Task['status'] | null>(null)
   const [mcpServers, setMcpServers] = useState<Connector[]>([])
   const [loadingMcpServers, setLoadingMcpServers] = useState(false)
-  const [diffsCache, setDiffsCache] = useState<Record<string, DiffData>>({})
-  const loadingDiffsRef = useRef(false)
+  // const [diffsCache, setDiffsCache] = useState<Record<string, DiffData>>({}) - REMOVED
+  // const loadingDiffsRef = useRef(false) - REMOVED
   const [refreshKey, setRefreshKey] = useState(0)
   const previousStatusRef = useRef<Task['status']>(task.status)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -593,7 +593,7 @@ export function TaskDetails({ task }: TaskDetailsProps) {
   }, [task.id, task.branchName, currentStatus, deploymentUrl])
 
   // Update deploymentUrl when task.previewUrl changes
-  useEffect(() => {}, [deploymentUrl])
+  useEffect(() => { }, [deploymentUrl])
 
   // Update prUrl, prNumber, and prStatus when task values change
   useEffect(() => {
@@ -680,48 +680,10 @@ export function TaskDetails({ task }: TaskDetailsProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task.prNumber])
 
-  // Fetch diffs for changed files only (in "changes" mode)
-  const fetchAllDiffs = useCallback(
-    async (filesList: string[]) => {
-      if (!filesList.length || loadingDiffsRef.current) return
-
-      // Store all files for search
-      setAllFiles(filesList)
-
-      // Only pre-fetch diffs in "local" or "remote" mode
-      if (viewMode !== 'local' && viewMode !== 'remote') return
-
-      loadingDiffsRef.current = true
-      const newDiffsCache: Record<string, DiffData> = {}
-
-      try {
-        // Fetch all diffs in parallel
-        const diffPromises = filesList.map(async (filename) => {
-          try {
-            const params = new URLSearchParams()
-            params.set('filename', filename)
-
-            const response = await fetch(`/api/tasks/${task.id}/diff?${params.toString()}`)
-            const result = await response.json()
-
-            if (response.ok && result.success) {
-              newDiffsCache[filename] = result.data
-            }
-          } catch (err) {
-            console.error('Error fetching diff for file:', err)
-          }
-        })
-
-        await Promise.all(diffPromises)
-        setDiffsCache(newDiffsCache)
-      } catch (error) {
-        console.error('Error fetching diffs:', error)
-      } finally {
-        loadingDiffsRef.current = false
-      }
-    },
-    [task.id, viewMode],
-  )
+  // Fetch all diffs function removed to disable Git integration
+  const fetchAllDiffs = useCallback(async (filesList: string[]) => {
+    // No-op
+  }, [])
 
   // Handle click outside file dropdown
   useEffect(() => {
@@ -820,7 +782,7 @@ export function TaskDetails({ task }: TaskDetailsProps) {
     ) {
       setRefreshKey((prev) => prev + 1)
       // Clear diffs cache to force reload
-      setDiffsCache({})
+      // setDiffsCache({}) - REMOVED
       // Clear selected files for all modes
       setSelectedFileByMode({ local: undefined, remote: undefined, all: undefined, 'all-local': undefined })
     }
@@ -1386,7 +1348,6 @@ export function TaskDetails({ task }: TaskDetailsProps) {
                 taskId={task.id}
                 branchName={task.branchName}
                 onFileSelect={openFileInTab}
-                onFilesLoaded={fetchAllDiffs}
                 selectedFile={selectedFile}
                 refreshKey={refreshKey}
                 viewMode={viewMode}
@@ -1517,8 +1478,8 @@ export function TaskDetails({ task }: TaskDetailsProps) {
                   <div className="overflow-y-auto flex-1">
                     <FileDiffViewer
                       selectedFile={selectedItemIsFolder ? undefined : selectedFile}
-                      diffsCache={diffsCache}
-                      isInitialLoading={Object.keys(diffsCache).length === 0}
+                      diffsCache={{}} // Empty cache since we disabled diff fetching
+                      isInitialLoading={false}
                       viewMode={viewMode}
                       taskId={task.id}
                       onUnsavedChanges={
@@ -1589,8 +1550,8 @@ export function TaskDetails({ task }: TaskDetailsProps) {
                   <div className="overflow-y-auto h-full">
                     <FileDiffViewer
                       selectedFile={selectedItemIsFolder ? undefined : selectedFile}
-                      diffsCache={diffsCache}
-                      isInitialLoading={Object.keys(diffsCache).length === 0}
+                      diffsCache={{}} // Empty cache
+                      isInitialLoading={false}
                       viewMode={viewMode}
                       taskId={task.id}
                       onUnsavedChanges={
@@ -1683,17 +1644,15 @@ export function TaskDetails({ task }: TaskDetailsProps) {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleViewModeChange(subMode === 'local' ? 'local' : 'remote')}
-                          className={`text-sm font-semibold px-2 py-1 rounded transition-colors ${
-                            filesPane === 'changes' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-                          }`}
+                          className={`text-sm font-semibold px-2 py-1 rounded transition-colors ${filesPane === 'changes' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                            }`}
                         >
                           Changes
                         </button>
                         <button
                           onClick={() => handleViewModeChange(subMode === 'local' ? 'all-local' : 'all')}
-                          className={`text-sm font-semibold px-2 py-1 rounded transition-colors ${
-                            filesPane === 'files' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-                          }`}
+                          className={`text-sm font-semibold px-2 py-1 rounded transition-colors ${filesPane === 'files' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                            }`}
                         >
                           Files
                         </button>
@@ -1705,11 +1664,10 @@ export function TaskDetails({ task }: TaskDetailsProps) {
                           variant={subMode === 'remote' ? 'secondary' : 'ghost'}
                           size="sm"
                           onClick={() => handleViewModeChange(filesPane === 'files' ? 'all' : 'remote')}
-                          className={`h-6 px-2 text-xs rounded-sm ${
-                            subMode === 'remote'
-                              ? 'bg-background shadow-sm'
-                              : 'hover:bg-transparent hover:text-foreground'
-                          }`}
+                          className={`h-6 px-2 text-xs rounded-sm ${subMode === 'remote'
+                            ? 'bg-background shadow-sm'
+                            : 'hover:bg-transparent hover:text-foreground'
+                            }`}
                         >
                           Remote
                         </Button>
@@ -1717,11 +1675,10 @@ export function TaskDetails({ task }: TaskDetailsProps) {
                           variant={subMode === 'local' ? 'secondary' : 'ghost'}
                           size="sm"
                           onClick={() => handleViewModeChange(filesPane === 'files' ? 'all-local' : 'local')}
-                          className={`h-6 px-2 text-xs rounded-sm ${
-                            subMode === 'local'
-                              ? 'bg-background shadow-sm'
-                              : 'hover:bg-transparent hover:text-foreground'
-                          }`}
+                          className={`h-6 px-2 text-xs rounded-sm ${subMode === 'local'
+                            ? 'bg-background shadow-sm'
+                            : 'hover:bg-transparent hover:text-foreground'
+                            }`}
                         >
                           Local
                         </Button>
@@ -1739,7 +1696,7 @@ export function TaskDetails({ task }: TaskDetailsProps) {
                         setShowFilesList(false)
                       }
                     }}
-                    onFilesLoaded={fetchAllDiffs}
+                    // onFilesLoaded={fetchAllDiffs}
                     selectedFile={selectedFile}
                     refreshKey={refreshKey}
                     viewMode={viewMode}
@@ -1894,12 +1851,12 @@ export function TaskDetails({ task }: TaskDetailsProps) {
               Do you want to save the changes you made to{' '}
               {tabToClose !== null
                 ? (() => {
-                    const currentTabs = openTabsByMode[viewMode]
-                    const filename = currentTabs[tabToClose]
-                    if (!filename) return 'this file'
-                    const shortName = filename.split('/').pop()
-                    return shortName
-                  })()
+                  const currentTabs = openTabsByMode[viewMode]
+                  const filename = currentTabs[tabToClose]
+                  if (!filename) return 'this file'
+                  const shortName = filename.split('/').pop()
+                  return shortName
+                })()
                 : 'this file'}
               ?
             </AlertDialogDescription>

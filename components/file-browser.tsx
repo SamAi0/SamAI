@@ -18,8 +18,10 @@ import {
   FilePlus,
   FolderPlus,
   Trash2,
+  Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { useAtom } from 'jotai'
 import { getTaskFileBrowserState } from '@/lib/atoms/file-browser'
 import { useMemo } from 'react'
@@ -126,6 +128,12 @@ export function FileBrowser({
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [fileToDelete, setFileToDelete] = useState<string | null>(null)
+
+  // AI Edit States
+  const [showAIEditDialog, setShowAIEditDialog] = useState(false)
+  const [aiEditFile, setAiEditFile] = useState<string | null>(null)
+  const [aiInstruction, setAiInstruction] = useState('')
+  const [isAiEditing, setIsAiEditing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
   const [fileToDiscard, setFileToDiscard] = useState<string | null>(null)
@@ -428,7 +436,7 @@ export function FileBrowser({
     try {
       // If a folder is selected, prepend its path to the filename
       const isSelectedItemFolder =
-        selectedFile && files.some((f: FileChange) => f.filename.startsWith(selectedFile + '/'))
+        selectedFile && files.some((f: FileChange) => f.filename && f.filename.startsWith(selectedFile + '/'))
       const filename =
         isSelectedItemFolder && !newFileName.includes('/')
           ? `${selectedFile}/${newFileName.trim()}`
@@ -817,6 +825,53 @@ export function FileBrowser({
     }
   }, [fileToDiscard, taskId, viewMode, currentViewData, setState])
 
+  const handleAIEdit = useCallback(async () => {
+    if (!aiEditFile || !aiInstruction.trim()) return
+
+    setIsAiEditing(true)
+
+    try {
+      const response = await fetch('/api/ai/edit-file', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filePath: aiEditFile,
+          instruction: aiInstruction,
+          taskId
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to edit file with AI')
+      }
+
+      toast.success('AI successfully edited the file!')
+
+      // Refresh the file list
+      // Force refresh by resetting fetchAttempted
+      setState({
+        [viewMode]: {
+          ...currentViewData,
+          fetchAttempted: false,
+        },
+      })
+      fetchBranchFiles()
+
+    } catch (err: any) {
+      console.error('Error editing file with AI:', err)
+      toast.error(err.message || 'Failed to edit file with AI')
+    } finally {
+      setIsAiEditing(false)
+      setShowAIEditDialog(false)
+      setAiInstruction('')
+      setAiEditFile(null)
+    }
+  }, [aiEditFile, aiInstruction, taskId, viewMode, currentViewData, setState, fetchBranchFiles])
+
   // Drag and drop handlers
   const handleDragStart = useCallback(
     (e: React.DragEvent, path: string, type: 'file' | 'folder') => {
@@ -1012,9 +1067,8 @@ export function FileBrowser({
             onDragOver={(e) => handleDragOver(e, fullPath)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, fullPath)}
-            className={`flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-sm ${
-              isSelected ? 'bg-card' : 'hover:bg-card/50'
-            } ${isDropTarget ? 'bg-blue-500/20' : ''} ${isDragging ? 'opacity-50 cursor-move' : 'cursor-pointer'}`}
+            className={`flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-sm ${isSelected ? 'bg-card' : 'hover:bg-card/50'
+              } ${isDropTarget ? 'bg-blue-500/20' : ''} ${isDragging ? 'opacity-50 cursor-move' : 'cursor-pointer'}`}
             onClick={() => {
               if (!isDraggingActive) {
                 toggleFolder(fullPath)
@@ -1125,9 +1179,8 @@ export function FileBrowser({
             draggable={isDragEnabled}
             onDragStart={(e) => handleDragStart(e, node.filename!, 'file')}
             onDragEnd={handleDragEnd}
-            className={`flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-sm ${
-              isSelected ? 'bg-card' : 'hover:bg-card/50'
-            } ${isCut || isDragging ? 'opacity-50' : ''} ${isDragging ? 'cursor-move' : 'cursor-pointer'}`}
+            className={`flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-sm ${isSelected ? 'bg-card' : 'hover:bg-card/50'
+              } ${isCut || isDragging ? 'opacity-50' : ''} ${isDragging ? 'cursor-move' : 'cursor-pointer'}`}
             onClick={() => {
               if (!isDraggingActive) {
                 onFileSelect?.(node.filename!, false)
@@ -1139,13 +1192,12 @@ export function FileBrowser({
               <File className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground flex-shrink-0" />
             </div>
             <span
-              className={`text-xs md:text-sm flex-1 truncate ${
-                viewMode === 'all-local' && node.status === 'added'
-                  ? 'text-green-600'
-                  : viewMode === 'all-local' && node.status === 'modified'
-                    ? 'text-yellow-600'
-                    : ''
-              }`}
+              className={`text-xs md:text-sm flex-1 truncate ${viewMode === 'all-local' && node.status === 'added'
+                ? 'text-green-600'
+                : viewMode === 'all-local' && node.status === 'modified'
+                  ? 'text-yellow-600'
+                  : ''
+                }`}
             >
               {name}
             </span>
@@ -1210,6 +1262,15 @@ export function FileBrowser({
                       ) : (
                         // Files mode: Show all file operations
                         <>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setAiEditFile(node.filename!)
+                              setShowAIEditDialog(true)
+                            }}
+                          >
+                            <Sparkles className="w-4 h-4 mr-2 text-purple-500" />
+                            Edit with AI
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleCut(node.filename!)}>
                             <Scissors className="w-4 h-4 mr-2" />
                             Cut
@@ -1291,17 +1352,15 @@ export function FileBrowser({
             <div className="flex items-center gap-1">
               <button
                 onClick={() => onViewModeChange?.(subMode === 'local' ? 'local' : 'remote')}
-                className={`text-sm font-semibold px-2 py-1 rounded transition-colors ${
-                  filesPane === 'changes' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`text-sm font-semibold px-2 py-1 rounded transition-colors ${filesPane === 'changes' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 Changes
               </button>
               <button
                 onClick={() => onViewModeChange?.(subMode === 'local' ? 'all-local' : 'all')}
-                className={`text-sm font-semibold px-2 py-1 rounded transition-colors ${
-                  filesPane === 'files' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`text-sm font-semibold px-2 py-1 rounded transition-colors ${filesPane === 'files' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 Files
               </button>
@@ -1313,11 +1372,10 @@ export function FileBrowser({
                 variant={subMode === 'remote' ? 'secondary' : 'ghost'}
                 size="sm"
                 onClick={() => onViewModeChange?.(filesPane === 'files' ? 'all' : 'remote')}
-                className={`h-6 px-2 text-xs rounded-sm ${
-                  subMode === 'remote'
-                    ? 'bg-background shadow-sm hover:bg-background'
-                    : 'hover:bg-transparent hover:text-foreground'
-                }`}
+                className={`h-6 px-2 text-xs rounded-sm ${subMode === 'remote'
+                  ? 'bg-background shadow-sm hover:bg-background'
+                  : 'hover:bg-transparent hover:text-foreground'
+                  }`}
               >
                 Remote
               </Button>
@@ -1325,11 +1383,10 @@ export function FileBrowser({
                 variant={subMode === 'local' ? 'secondary' : 'ghost'}
                 size="sm"
                 onClick={() => onViewModeChange?.(filesPane === 'files' ? 'all-local' : 'local')}
-                className={`h-6 px-2 text-xs rounded-sm ${
-                  subMode === 'local'
-                    ? 'bg-background shadow-sm hover:bg-background'
-                    : 'hover:bg-transparent hover:text-foreground'
-                }`}
+                className={`h-6 px-2 text-xs rounded-sm ${subMode === 'local'
+                  ? 'bg-background shadow-sm hover:bg-background'
+                  : 'hover:bg-transparent hover:text-foreground'
+                  }`}
               >
                 Local
               </Button>
@@ -1615,7 +1672,7 @@ export function FileBrowser({
           <DialogHeader>
             <DialogTitle>Create New File</DialogTitle>
             <DialogDescription>
-              {selectedFile && files.some((f: FileChange) => f.filename.startsWith(selectedFile + '/'))
+              {selectedFile && files.some((f: FileChange) => f.filename && f.filename.startsWith(selectedFile + '/'))
                 ? `Creating file in: ${selectedFile}/`
                 : 'Enter the name for the new file (e.g., src/utils/helper.ts).'}
             </DialogDescription>
@@ -1793,6 +1850,54 @@ export function FileBrowser({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* AI Edit Dialog */}
+      <Dialog open={showAIEditDialog} onOpenChange={setShowAIEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit with AI</DialogTitle>
+            <DialogDescription>
+              Describe how you want to modify <strong>{aiEditFile}</strong>. The AI will analyze the file and apply changes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="ai-instruction">Instruction</Label>
+            <Textarea
+              id="ai-instruction"
+              value={aiInstruction}
+              onChange={(e) => setAiInstruction(e.target.value)}
+              placeholder="e.g. Add a function to calculate factorial, or Fix the bug in the login handler..."
+              className="mt-2 min-h-[100px]"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAIEditDialog(false)
+                setAiInstruction('')
+              }}
+              disabled={isAiEditing}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleAIEdit} disabled={isAiEditing || !aiInstruction.trim()} className="bg-purple-600 hover:bg-purple-700 text-white">
+              {isAiEditing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Generate Edits
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -115,6 +115,11 @@ export class TokenLimiter {
         maxContextTokens: 32000, // Very large context
         maxMessageTokens: 8000, // Still conservative for safety
       }
+    } else if (modelLower.includes('deepseek')) {
+      return {
+        maxContextTokens: 16000,
+        maxMessageTokens: 8000,
+      }
     } else if (modelLower.includes('gemma')) {
       return {
         maxContextTokens: 8000,

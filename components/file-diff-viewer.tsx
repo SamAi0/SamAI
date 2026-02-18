@@ -124,15 +124,9 @@ export function FileDiffViewer({
         params.set('filename', selectedFile)
 
         // In "all" or "all-local" mode, fetch file content; in "local" or "remote" mode, fetch diff
-        const endpoint =
-          viewMode === 'all' || viewMode === 'all-local'
-            ? `/api/tasks/${taskId}/file-content`
-            : `/api/tasks/${taskId}/diff`
+        // Always fetch file content, never diffs
+        const endpoint = `/api/tasks/${taskId}/file-content`
 
-        // For local mode, add a query parameter to get local diff instead of PR diff
-        if (viewMode === 'local' || viewMode === 'all-local') {
-          params.set('mode', 'local')
-        }
         const response = await fetch(`${endpoint}?${params.toString()}`)
         const result = await response.json()
 

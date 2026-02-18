@@ -17,43 +17,47 @@ const WORKSPACE_ROOT = path.resolve(SECURITY_CONFIG.WORKSPACE_ROOT)
  * Validates that a given path is within the workspace boundaries
  * @param inputPath - The path to validate
  * @param operation - The operation being performed (for logging context)
+ * @param taskId - Optional task ID to enforce task-specific isolation
  * @returns The resolved absolute path if valid, throws error if invalid
  */
-export function validateWorkspacePath(inputPath: string, operation: string = 'file_operation'): string {
+export function validateWorkspacePath(inputPath: string, operation: string = 'file_operation', taskId?: string): string {
   // Log access attempt
   securityAudit.logAccessAttempt(operation, inputPath)
-  
+
   // Resolve the input path to absolute path
   const resolvedPath = path.resolve(inputPath)
-  
+
+  // Determine the effective workspace root
+  const effectiveRoot = getWorkspaceRoot(taskId)
+
   // Check if path is within workspace root
-  const isWithinWorkspace = resolvedPath.startsWith(WORKSPACE_ROOT)
-  
+  const isWithinWorkspace = resolvedPath.startsWith(effectiveRoot)
+
   // Additional security checks
   const hasPathTraversal = inputPath.includes('..')
-  const isAbsoluteOutsideWorkspace = path.isAbsolute(inputPath) && !resolvedPath.startsWith(WORKSPACE_ROOT)
-  
+  const isAbsoluteOutsideWorkspace = path.isAbsolute(inputPath) && !resolvedPath.startsWith(effectiveRoot)
+
   // Log security violations (server-side only)
   if (!isWithinWorkspace || hasPathTraversal || isAbsoluteOutsideWorkspace) {
     const violationDetails = {
       resolvedPath,
-      workspaceRoot: WORKSPACE_ROOT,
+      workspaceRoot: effectiveRoot,
       isWithinWorkspace,
       hasPathTraversal,
       isAbsoluteOutsideWorkspace,
       securityConfig: SECURITY_CONFIG.PATH_VALIDATION
     }
-    
+
     securityAudit.logViolationBlocked(operation, inputPath, violationDetails)
-    
+
     console.error(`SECURITY VIOLATION: Path access blocked`, violationDetails)
-    
+
     throw new Error('ACCESS_DENIED: Path outside workspace boundaries')
   }
-  
+
   // Log successful validation
   securityAudit.logPathValidated(operation, inputPath, resolvedPath)
-  
+
   return resolvedPath
 }
 
@@ -69,12 +73,12 @@ export function validateRequestPath(request: NextRequest, pathParam: string): st
     const url = new URL(request.url)
     const searchParams = url.searchParams
     const pathFromParams = searchParams.get(pathParam) || ''
-    
+
     // If no path provided, return workspace root
     if (!pathFromParams) {
       return WORKSPACE_ROOT
     }
-    
+
     return validateWorkspacePath(pathFromParams, `api_request_${request.method}`)
   } catch (error) {
     console.error('Path validation failed:', error)
@@ -94,9 +98,14 @@ export function safeJoinPath(...paths: string[]): string {
 
 /**
  * Get workspace root directory
+ * @param taskId - Optional task ID for isolated workspace
  * @returns The absolute path to workspace root
  */
-export function getWorkspaceRoot(): string {
+export function getWorkspaceRoot(taskId?: string): string {
+  if (taskId) {
+    // Return isolated workspace path
+    return path.join(WORKSPACE_ROOT, '.gemini', 'workspaces', taskId)
+  }
   return WORKSPACE_ROOT
 }
 

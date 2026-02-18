@@ -19,6 +19,7 @@ import {
   MoreVertical,
   MessageSquare,
 } from 'lucide-react'
+import { AGENT_MODELS } from '@/lib/constants'
 import { toast } from 'sonner'
 import { Streamdown } from 'streamdown'
 import { useAtom } from 'jotai'
@@ -403,7 +404,7 @@ export function TaskChat({ taskId, task }: TaskChatProps) {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
   }
 
-  const [selectedModel, setSelectedModel] = useState<'codellama' | 'qwen' | 'gemma3:1b'>('codellama')
+  const [selectedModel, setSelectedModel] = useState<'codellama' | 'qwen' | 'gemma3:1b' | 'deepseek-coder:6.7b-instruct-q4_K_M'>('deepseek-coder:6.7b-instruct-q4_K_M')
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || isSending) return
@@ -415,47 +416,11 @@ export function TaskChat({ taskId, task }: TaskChatProps) {
     setNewMessage('')
 
     try {
-      // First, send the user message to the existing API
-      const response = await fetch(`/api/tasks/${taskId}/continue`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: messageToSend,
-        }),
-      })
-
-      let data;
-      try {
-        data = await response.json()
-      } catch (parseError) {
-        console.error('JSON parsing error for /api/tasks/[taskId]/continue:', parseError)
-        console.error('Response status:', response.status)
-        console.error('Response headers:', Object.fromEntries(response.headers.entries()))
-        
-        // Try to get text response to see what's actually being returned
-        const textResponse = await response.text()
-        console.error('Raw response:', textResponse.substring(0, 500)) // First 500 chars
-        
-        toast.error('Server error: Invalid response format')
-        setNewMessage(messageToSend) // Restore the message on error
-        setIsSending(false)
-        return
-      }
-
-      if (!response.ok) {
-        toast.error(data.error || 'Failed to send message')
-        setNewMessage(messageToSend) // Restore the message on error
-        setIsSending(false)
-        return
-      }
-
       // Refresh messages to show the new user message
-      await fetchMessages(false)
+      // await fetchMessages(false) // No need to fetch, the stream will handle connection
 
-      // Now send to Ollama for response
-      const ollamaResponse = await fetch('/api/llm/chat', {
+      // Send to unified chat API (saves user message AND streams response)
+      const response = await fetch(`/api/tasks/${taskId}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -466,24 +431,22 @@ export function TaskChat({ taskId, task }: TaskChatProps) {
         }),
       })
 
-      if (!ollamaResponse.ok) {
+      if (!response.ok) {
         let errorData;
         try {
-          errorData = await ollamaResponse.json()
+          errorData = await response.json()
         } catch (parseError) {
-          console.error('JSON parsing error for Ollama response:', parseError)
-          console.error('Ollama response status:', ollamaResponse.status)
-          console.error('Ollama response headers:', Object.fromEntries(ollamaResponse.headers.entries()))
-          
-          // Try to get text response to see what's actually being returned
-          const textResponse = await ollamaResponse.text()
-          console.error('Ollama raw response:', textResponse.substring(0, 500)) // First 500 chars
-          
-          toast.error('Ollama service error: Invalid response format')
+          console.error('JSON parsing error for chat response:', parseError)
+          const textResponse = await response.text()
+          console.error('Raw response:', textResponse.substring(0, 500))
+
+          toast.error('Server error: Invalid response format')
+          setNewMessage(messageToSend)
           setIsSending(false)
           return
         }
-        toast.error(errorData.error || 'Failed to get response from Ollama')
+        toast.error(errorData.error || 'Failed to send message')
+        setNewMessage(messageToSend)
         setIsSending(false)
         return
       }
@@ -498,10 +461,19 @@ export function TaskChat({ taskId, task }: TaskChatProps) {
         createdAt: new Date(),
       }
 
-      setMessages((prev) => [...prev, tempAgentMessage])
+      // Add optimistic user message if we didn't fetch it
+      const tempUserMessage: TaskMessage = {
+        id: `user-${Date.now()}`,
+        taskId,
+        role: 'user' as const,
+        content: messageToSend,
+        createdAt: new Date(),
+      }
+
+      setMessages((prev) => [...prev, tempUserMessage, tempAgentMessage])
 
       // Handle streaming response
-      const reader = ollamaResponse.body?.getReader()
+      const reader = response.body?.getReader()
       const decoder = new TextDecoder()
       let accumulatedResponse = ''
 
@@ -517,23 +489,26 @@ export function TaskChat({ taskId, task }: TaskChatProps) {
             for (const line of lines) {
               if (line.trim()) {
                 try {
-                  const jsonData = JSON.parse(line)
-                  if (jsonData.type === 'response' && jsonData.content) {
-                    accumulatedResponse += jsonData.content
-                    // Update the temporary message with the accumulated response
-                    setMessages((prev) =>
-                      prev.map((msg) =>
-                        msg.id === tempAgentMessageId ? { ...msg, content: accumulatedResponse } : msg,
-                      ),
-                    )
-                  } else if (jsonData.type === 'done') {
-                    break
+                  // Check for SSE format data: ...
+                  if (line.startsWith('data: ')) {
+                    const jsonStr = line.substring(6)
+                    const jsonData = JSON.parse(jsonStr)
+
+                    if (jsonData.type === 'response' && jsonData.content) {
+                      accumulatedResponse += jsonData.content
+                      setMessages((prev) =>
+                        prev.map((msg) =>
+                          msg.id === tempAgentMessageId ? { ...msg, content: accumulatedResponse } : msg,
+                        ),
+                      )
+                    } else if (jsonData.type === 'done') {
+                      break
+                    } else if (jsonData.type === 'error') {
+                      toast.error(jsonData.error || 'Stream error')
+                    }
                   }
                 } catch (e) {
-                  // Log non-JSON lines for debugging but don't show to user
-                  if (line.trim() && !line.startsWith('<!DOCTYPE') && !line.startsWith('<html')) {
-                    console.debug('Skipping non-JSON line in stream:', line.substring(0, 100))
-                  }
+                  // console.debug('Skipping non-JSON line:', line)
                 }
               }
             }
@@ -543,7 +518,7 @@ export function TaskChat({ taskId, task }: TaskChatProps) {
         } finally {
           reader.releaseLock()
 
-          // Final refresh to ensure all messages are up to date
+          // Final refresh to ensure all messages are up to date and IDs are correct
           await fetchMessages(false)
         }
       }
@@ -555,6 +530,7 @@ export function TaskChat({ taskId, task }: TaskChatProps) {
       setIsSending(false)
     }
   }
+
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -1000,147 +976,147 @@ Please address the above PR comment and make the necessary changes to ensure the
                     <div className="text-xs text-muted-foreground px-2">
                       {!agentMessage.content.trim() && (task.status === 'processing' || task.status === 'pending')
                         ? (() => {
-                            return (
-                              <div className="opacity-50">
-                                <div className="italic">Generating response...</div>
-                                <div className="text-right font-mono opacity-70 mt-1">
-                                  {formatDuration(group.userMessage.createdAt)}
-                                </div>
+                          return (
+                            <div className="opacity-50">
+                              <div className="italic">Generating response...</div>
+                              <div className="text-right font-mono opacity-70 mt-1">
+                                {formatDuration(group.userMessage.createdAt)}
                               </div>
-                            )
-                          })()
+                            </div>
+                          )
+                        })()
                         : (() => {
-                            // Determine if this is the last agent message
-                            const allAgentMessages = displayMessages.filter((m) => m.role === 'agent')
-                            const isLastAgentMessage =
-                              allAgentMessages.length > 0 &&
-                              allAgentMessages[allAgentMessages.length - 1].id === agentMessage.id
+                          // Determine if this is the last agent message
+                          const allAgentMessages = displayMessages.filter((m) => m.role === 'agent')
+                          const isLastAgentMessage =
+                            allAgentMessages.length > 0 &&
+                            allAgentMessages[allAgentMessages.length - 1].id === agentMessage.id
 
-                            const isAgentWorking = task.status === 'processing' || task.status === 'pending'
-                            const content = parseAgentMessage(agentMessage.content)
+                          const isAgentWorking = task.status === 'processing' || task.status === 'pending'
+                          const content = parseAgentMessage(agentMessage.content)
 
-                            // Pre-process content to mark the last tool call with a special marker
-                            let processedContent = content
-                            if (isAgentWorking && isLastAgentMessage) {
-                              // Find all tool calls (more comprehensive pattern)
-                              const toolCallRegex = /\n\n([A-Z][a-z]+(?:\s+[a-z]+)*:?\s+[^\n]+)/g
-                              const matches = Array.from(content.matchAll(toolCallRegex))
+                          // Pre-process content to mark the last tool call with a special marker
+                          let processedContent = content
+                          if (isAgentWorking && isLastAgentMessage) {
+                            // Find all tool calls (more comprehensive pattern)
+                            const toolCallRegex = /\n\n([A-Z][a-z]+(?:\s+[a-z]+)*:?\s+[^\n]+)/g
+                            const matches = Array.from(content.matchAll(toolCallRegex))
 
-                              // Filter to only actual tool calls
-                              const toolCallMatches = matches.filter((match) => {
-                                const text = match[1]
-                                return /^(?:Editing|Reading|Running|Listing|Executing|Searching|Finding|Grep)/i.test(
-                                  text,
-                                )
-                              })
+                            // Filter to only actual tool calls
+                            const toolCallMatches = matches.filter((match) => {
+                              const text = match[1]
+                              return /^(?:Editing|Reading|Running|Listing|Executing|Searching|Finding|Grep)/i.test(
+                                text,
+                              )
+                            })
 
-                              if (toolCallMatches.length > 0) {
-                                // Get the last match
-                                const lastMatch = toolCallMatches[toolCallMatches.length - 1]
-                                const lastToolCall = lastMatch[1]
-                                const lastIndex = lastMatch.index! + 2 // +2 for \n\n
-                                const endOfToolCall = lastIndex + lastToolCall.length
+                            if (toolCallMatches.length > 0) {
+                              // Get the last match
+                              const lastMatch = toolCallMatches[toolCallMatches.length - 1]
+                              const lastToolCall = lastMatch[1]
+                              const lastIndex = lastMatch.index! + 2 // +2 for \n\n
+                              const endOfToolCall = lastIndex + lastToolCall.length
 
-                                // Check if there's any non-whitespace content after the last tool call
-                                const contentAfter = content.substring(endOfToolCall).trim()
+                              // Check if there's any non-whitespace content after the last tool call
+                              const contentAfter = content.substring(endOfToolCall).trim()
 
-                                // Only add the shimmer marker if there's no content after it
-                                if (!contentAfter) {
-                                  processedContent =
-                                    content.substring(0, lastIndex) +
-                                    '🔄SHIMMER🔄' +
-                                    lastToolCall +
-                                    content.substring(endOfToolCall)
-                                }
+                              // Only add the shimmer marker if there's no content after it
+                              if (!contentAfter) {
+                                processedContent =
+                                  content.substring(0, lastIndex) +
+                                  '🔄SHIMMER🔄' +
+                                  lastToolCall +
+                                  content.substring(endOfToolCall)
                               }
                             }
+                          }
 
-                            return (
-                              <Streamdown
-                                components={{
-                                  code: ({ className, children, ...props }: React.ComponentPropsWithoutRef<'code'>) => (
-                                    <code className={`${className} !text-xs`} {...props}>
-                                      {children}
-                                    </code>
-                                  ),
-                                  pre: ({ children, ...props }: React.ComponentPropsWithoutRef<'pre'>) => (
-                                    <pre className="!text-xs" {...props}>
-                                      {children}
-                                    </pre>
-                                  ),
-                                  p: ({ children, ...props }: React.ComponentPropsWithoutRef<'p'>) => {
-                                    // Extract text from complex children structures
-                                    const childrenArray = Children.toArray(children)
-                                    const textParts: string[] = []
+                          return (
+                            <Streamdown
+                              components={{
+                                code: ({ className, children, ...props }: React.ComponentPropsWithoutRef<'code'>) => (
+                                  <code className={`${className} !text-xs`} {...props}>
+                                    {children}
+                                  </code>
+                                ),
+                                pre: ({ children, ...props }: React.ComponentPropsWithoutRef<'pre'>) => (
+                                  <pre className="!text-xs" {...props}>
+                                    {children}
+                                  </pre>
+                                ),
+                                p: ({ children, ...props }: React.ComponentPropsWithoutRef<'p'>) => {
+                                  // Extract text from complex children structures
+                                  const childrenArray = Children.toArray(children)
+                                  const textParts: string[] = []
 
-                                    childrenArray.forEach((child) => {
-                                      if (typeof child === 'string') {
-                                        textParts.push(child)
-                                      } else if (isValidElement(child)) {
-                                        // It's a React element - keep it as-is, don't stringify
-                                        // This will be handled by React
-                                      }
-                                      // Skip plain objects entirely
-                                    })
+                                  childrenArray.forEach((child) => {
+                                    if (typeof child === 'string') {
+                                      textParts.push(child)
+                                    } else if (isValidElement(child)) {
+                                      // It's a React element - keep it as-is, don't stringify
+                                      // This will be handled by React
+                                    }
+                                    // Skip plain objects entirely
+                                  })
 
-                                    const text = textParts.join('')
-                                    const hasShimmerMarker = text.includes('🔄SHIMMER🔄')
-                                    const isToolCall =
-                                      /^(🔄SHIMMER🔄)?(Editing|Reading|Running|Listing|Executing|Searching|Finding|Grep)/i.test(
-                                        text,
-                                      )
-
-                                    // Always remove the marker from display (global replace to catch all instances)
-                                    const displayText = text.replace(/🔄SHIMMER🔄/g, '')
-
-                                    // If we have React elements, also remove marker from string children
-                                    const hasReactElements = childrenArray.some((child) => isValidElement(child))
-                                    const cleanedChildren = hasReactElements
-                                      ? childrenArray
-                                          .map((child) =>
-                                            typeof child === 'string' ? child.replace(/🔄SHIMMER🔄/g, '') : child,
-                                          )
-                                          .filter((child) => typeof child === 'string' || isValidElement(child))
-                                      : displayText
-
-                                    return (
-                                      <p
-                                        className={
-                                          isToolCall
-                                            ? hasShimmerMarker
-                                              ? 'bg-gradient-to-r from-muted-foreground from-20% via-foreground/40 via-50% to-muted-foreground to-80% bg-clip-text text-transparent bg-[length:300%_100%] animate-[shimmer_1.5s_linear_infinite]'
-                                              : 'text-muted-foreground/60'
-                                            : ''
-                                        }
-                                        {...props}
-                                      >
-                                        {cleanedChildren}
-                                      </p>
+                                  const text = textParts.join('')
+                                  const hasShimmerMarker = text.includes('🔄SHIMMER🔄')
+                                  const isToolCall =
+                                    /^(🔄SHIMMER🔄)?(Editing|Reading|Running|Listing|Executing|Searching|Finding|Grep)/i.test(
+                                      text,
                                     )
-                                  },
-                                  ul: ({ children, ...props }: React.ComponentPropsWithoutRef<'ul'>) => (
-                                    <ul className="text-xs list-disc ml-4" {...props}>
-                                      {children}
-                                    </ul>
-                                  ),
-                                  ol: ({ children, ...props }: React.ComponentPropsWithoutRef<'ol'>) => (
-                                    <ol className="text-xs list-decimal ml-4" {...props}>
-                                      {children}
-                                    </ol>
-                                  ),
-                                  li: ({ children, ...props }: React.ComponentPropsWithoutRef<'li'>) => (
-                                    <li className="text-xs mb-2" {...props}>
-                                      {Children.toArray(children).filter(
-                                        (c) => typeof c === 'string' || isValidElement(c),
-                                      )}
-                                    </li>
-                                  ),
-                                }}
-                              >
-                                {processedContent}
-                              </Streamdown>
-                            )
-                          })()}
+
+                                  // Always remove the marker from display (global replace to catch all instances)
+                                  const displayText = text.replace(/🔄SHIMMER🔄/g, '')
+
+                                  // If we have React elements, also remove marker from string children
+                                  const hasReactElements = childrenArray.some((child) => isValidElement(child))
+                                  const cleanedChildren = hasReactElements
+                                    ? childrenArray
+                                      .map((child) =>
+                                        typeof child === 'string' ? child.replace(/🔄SHIMMER🔄/g, '') : child,
+                                      )
+                                      .filter((child) => typeof child === 'string' || isValidElement(child))
+                                    : displayText
+
+                                  return (
+                                    <p
+                                      className={
+                                        isToolCall
+                                          ? hasShimmerMarker
+                                            ? 'bg-gradient-to-r from-muted-foreground from-20% via-foreground/40 via-50% to-muted-foreground to-80% bg-clip-text text-transparent bg-[length:300%_100%] animate-[shimmer_1.5s_linear_infinite]'
+                                            : 'text-muted-foreground/60'
+                                          : ''
+                                      }
+                                      {...props}
+                                    >
+                                      {cleanedChildren}
+                                    </p>
+                                  )
+                                },
+                                ul: ({ children, ...props }: React.ComponentPropsWithoutRef<'ul'>) => (
+                                  <ul className="text-xs list-disc ml-4" {...props}>
+                                    {children}
+                                  </ul>
+                                ),
+                                ol: ({ children, ...props }: React.ComponentPropsWithoutRef<'ol'>) => (
+                                  <ol className="text-xs list-decimal ml-4" {...props}>
+                                    {children}
+                                  </ol>
+                                ),
+                                li: ({ children, ...props }: React.ComponentPropsWithoutRef<'li'>) => (
+                                  <li className="text-xs mb-2" {...props}>
+                                    {Children.toArray(children).filter(
+                                      (c) => typeof c === 'string' || isValidElement(c),
+                                    )}
+                                  </li>
+                                ),
+                              }}
+                            >
+                              {processedContent}
+                            </Streamdown>
+                          )
+                        })()}
                     </div>
                     <div className="flex items-center gap-0.5 justify-end">
                       {/* Show copy button only when task is complete */}
@@ -1204,25 +1180,22 @@ Please address the above PR comment and make the necessary changes to ensure the
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveTab('chat')}
-            className={`text-sm font-semibold px-2 py-1 rounded transition-colors whitespace-nowrap flex-shrink-0 ${
-              currentTab === 'chat' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`text-sm font-semibold px-2 py-1 rounded transition-colors whitespace-nowrap flex-shrink-0 ${currentTab === 'chat' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             Chat
           </button>
           <button
             onClick={() => setActiveTab('comments')}
-            className={`text-sm font-semibold px-2 py-1 rounded transition-colors whitespace-nowrap flex-shrink-0 ${
-              currentTab === 'comments' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`text-sm font-semibold px-2 py-1 rounded transition-colors whitespace-nowrap flex-shrink-0 ${currentTab === 'comments' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             Comments
           </button>
           <button
             onClick={() => setActiveTab('actions')}
-            className={`text-sm font-semibold px-2 py-1 rounded transition-colors whitespace-nowrap flex-shrink-0 ${
-              currentTab === 'actions' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`text-sm font-semibold px-2 py-1 rounded transition-colors whitespace-nowrap flex-shrink-0 ${currentTab === 'actions' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             Checks
           </button>
@@ -1243,13 +1216,15 @@ Please address the above PR comment and make the necessary changes to ensure the
             <span className="text-xs text-muted-foreground">Model:</span>
             <select
               value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value as 'codellama' | 'qwen' | 'gemma3:1b')}
+              onChange={(e) => setSelectedModel(e.target.value as any)}
               className="text-xs bg-background border rounded px-2 py-1"
               disabled={isSending}
             >
-              <option value="codellama">CodeLlama</option>
-              <option value="qwen">Qwen</option>
-              <option value="gemma3:1b">Gemma 1B</option>
+              {AGENT_MODELS.ollama.map((model) => (
+                <option key={model.value} value={model.value}>
+                  {model.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -1279,7 +1254,8 @@ Please address the above PR comment and make the necessary changes to ensure the
             </button>
           )}
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   )
 }
